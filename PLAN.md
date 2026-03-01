@@ -1,8 +1,11 @@
 # Ringside Analytics — Engineering Plan
 
 > **Status:** Planning
+> **Author:** Theodore M. Rubin
+> **Version:** 1.0 — February 2026
 > **Created:** 2026-03-01
 > **Stack:** Next.js 14 / Express / FastAPI / PostgreSQL 16 / Redis 7 / XGBoost / Docker
+> **Source:** [Site Plan (Google Doc)](https://docs.google.com/document/d/11huygNDGitqTDSsQPlAINoOYCETYXjWZ/edit?usp=sharing)
 
 ---
 
@@ -15,14 +18,16 @@ Full-stack web application analyzing 40+ years of professional wrestling match d
 2. Historical match search & browse (40+ years)
 3. Data visualizations — win streaks, momentum curves, career trends, head-to-head records
 
+**Key insight:** Predictions are based on **booking patterns** (push momentum, title trajectories, win streaks, promotion tendencies) — not athletic performance. Wrestling outcomes are scripted, so the model learns what bookers tend to do, not who is the "better" wrestler.
+
+**Estimated data volume:** 200,000–400,000 matches, 10,000–15,000 unique wrestlers after entity resolution.
+
 ---
 
-## Prerequisites / Inputs Needed
+## Prerequisites / Inputs
 
-- [ ] `wrestlers_roster_2026.csv` — 354 wrestlers (name, org, brand, gender, status)
-- [ ] `Ringside_Analytics_Site_Plan.docx` — Full site plan with architecture, schema, features, roadmap
-
-> **Action required:** These files must be provided before Phase 1 work begins.
+- [x] `wrestlers_roster_2026.csv` — 354 wrestlers (172 WWE, 182 AEW) with name, org, brand, gender, status
+- [x] Site Plan Document — [Google Doc](https://docs.google.com/document/d/11huygNDGitqTDSsQPlAINoOYCETYXjWZ/edit?usp=sharing) (Version 1.0, Feb 2026)
 
 ---
 
@@ -93,6 +98,9 @@ Python scraper using `requests` + `BeautifulSoup`:
 - Pagination handling
 - Structured JSON output mapping to schema
 - Configurable date range and promotion
+- Respect robots.txt, attribute data sources
+
+**Additional data sources (future):** ProFightDB, Internet Wrestling Database, WWE API, AEW results sites, Kaggle datasets.
 
 ### 1.3 — ETL Pipeline (`etl/`)
 
@@ -205,6 +213,7 @@ Per wrestler, per match:
 | Head-to-Head | Prior record vs opponent, days since last matchup |
 | Career Phase | Years active, matches in last 90d (activity level), days since last match |
 | Promotion Context | Promotion-specific win rate, recently changed promotions flag |
+| Narrative Arc | Storyline indicators — feud duration, revenge match flag, debut/return flag |
 
 Output: feature matrix (one row per match participant), target = `won` (1/0).
 
@@ -213,6 +222,7 @@ Output: feature matrix (one row per match participant), target = `won` (1/0).
 - Temporal split: train < 2024, validate 2024, test 2025+
 - Baseline: Logistic Regression (interpretability)
 - Primary: XGBoost gradient boosted trees
+- Optional: LSTM for temporal/sequential booking patterns
 - Metrics: Accuracy, AUC-ROC, log loss, calibration curves
 - Feature importance extraction
 - Target accuracy: 65–70%
@@ -385,10 +395,28 @@ Active promotions: WWE Raw, SmackDown, NXT, AEW Dynamite/Collision/Rampage
 
 ---
 
+## Timeline (from Site Plan)
+
+| Phase | Duration | Weeks |
+|-------|----------|-------|
+| Phase 1: Data Foundation | 4–5 weeks | 1–5 |
+| Phase 2: API & Search | 4–5 weeks | 5–10 |
+| Phase 3: ML Predictions | 4–5 weeks | 10–14 |
+| Phase 4: Viz & Polish | 4 weeks | 14–18 |
+
+## Ethical / Legal Notes
+
+- Match results are factual data — OK to store and analyze
+- Do NOT reproduce source site presentation/design
+- Respect robots.txt on all scraping targets
+- Rate limit all scrapers (1 req/sec)
+- Cache raw HTML locally to minimize repeat requests
+- Attribute data sources on the platform
+
 ## Getting Started Checklist
 
-When ready to begin Phase 1:
-1. [ ] Provide `wrestlers_roster_2026.csv`
-2. [ ] Provide `Ringside_Analytics_Site_Plan.docx`
-3. [ ] Confirm or update answers to Open Questions above
-4. [ ] Run: `git init && git add PLAN.md && git commit -m "Initial plan"`
+1. [x] Provide `wrestlers_roster_2026.csv`
+2. [x] Provide Site Plan document
+3. [x] Initialize git repo + push to GitHub
+4. [ ] Confirm or update answers to Open Questions above
+5. [ ] Begin Phase 1 — `schema.sql` first
