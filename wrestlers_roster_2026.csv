@@ -1,0 +1,355 @@
+wrestler_name,organization,brand,gender,status
+Akira Tozawa,WWE,Raw,Male,Active
+Austin Theory,WWE,Raw,Male,Active
+Bron Breakker,WWE,Raw,Male,Injured
+Bronson Reed,WWE,Raw,Male,Injured
+Brutus Creed,WWE,Raw,Male,Active
+Chad Gable,WWE,Raw,Male,Active
+CM Punk,WWE,Raw,Male,Active
+Cruz Del Toro,WWE,Raw,Male,Active
+Dominik Mysterio,WWE,Raw,Male,Active
+Dragon Lee,WWE,Raw,Male,Active
+El Grande Americano,WWE,Raw,Male,Active
+Erik,WWE,Raw,Male,Active
+Finn Balor,WWE,Raw,Male,Active
+Grayson Waller,WWE,Raw,Male,Active
+Gunther,WWE,Raw,Male,Active
+Ivar,WWE,Raw,Male,Active
+JD McDonagh,WWE,Raw,Male,Active
+Je'Von Evans,WWE,Raw,Male,Active
+Jey Uso,WWE,Raw,Male,Active
+Jimmy Uso,WWE,Raw,Male,Active
+Joaquin Wilde,WWE,Raw,Male,Active
+Julius Creed,WWE,Raw,Male,Active
+Kofi Kingston,WWE,Raw,Male,Active
+LA Knight,WWE,Raw,Male,Active
+Logan Paul,WWE,Raw,Male,Active
+Ludwig Kaiser,WWE,Raw,Male,Active
+Otis,WWE,Raw,Male,Active
+Penta,WWE,Raw,Male,Active
+Pete Dunne,WWE,Raw,Male,Active
+Rey Mysterio,WWE,Raw,Male,Active
+Rusev,WWE,Raw,Male,Active
+Seth Rollins,WWE,Raw,Male,Injured
+Sheamus,WWE,Raw,Male,Injured
+Tyler Bate,WWE,Raw,Male,Active
+Xavier Woods,WWE,Raw,Male,Injured
+Asuka,WWE,Raw,Female,Active
+Bayley,WWE,Raw,Female,Active
+Becky Lynch,WWE,Raw,Female,Active
+Ivy Nile,WWE,Raw,Female,Active
+IYO SKY,WWE,Raw,Female,Active
+Kairi Sane,WWE,Raw,Female,Active
+Liv Morgan,WWE,Raw,Female,Active
+Lyra Valkyria,WWE,Raw,Female,Active
+Maxxine Dupri,WWE,Raw,Female,Active
+Naomi,WWE,Raw,Female,Inactive
+Natalya,WWE,Raw,Female,Active
+Nikki Bella,WWE,Raw,Female,Active
+Raquel Rodriguez,WWE,Raw,Female,Active
+Rhea Ripley,WWE,Raw,Female,Active
+Roxanne Perez,WWE,Raw,Female,Injured
+Stephanie Vaquer,WWE,Raw,Female,Active
+Zoey Stark,WWE,Raw,Female,Injured
+Aleister Black,WWE,SmackDown,Male,Active
+Alex Shelley,WWE,SmackDown,Male,Active
+Angel,WWE,SmackDown,Male,Active
+Angelo Dawkins,WWE,SmackDown,Male,Active
+Apollo Crews,WWE,SmackDown,Male,Active
+Axiom,WWE,SmackDown,Male,Active
+Berto,WWE,SmackDown,Male,Active
+Carmelo Hayes,WWE,SmackDown,Male,Active
+Chris Sabin,WWE,SmackDown,Male,Active
+Cody Rhodes,WWE,SmackDown,Male,Active
+Damian Priest,WWE,SmackDown,Male,Active
+Dexter Lumis,WWE,SmackDown,Male,Active
+Drew McIntyre,WWE,SmackDown,Male,Active
+Elton Prince,WWE,SmackDown,Male,Injured
+Erick Rowan,WWE,SmackDown,Male,Active
+Ilja Dragunov,WWE,SmackDown,Male,Active
+Jacob Fatu,WWE,SmackDown,Male,Active
+JC Mateo,WWE,SmackDown,Male,Active
+Joe Gacy,WWE,SmackDown,Male,Active
+Johnny Gargano,WWE,SmackDown,Male,Active
+Kevin Owens,WWE,SmackDown,Male,Injured
+Kit Wilson,WWE,SmackDown,Male,Active
+Matt Cardona,WWE,SmackDown,Male,Active
+The Miz,WWE,SmackDown,Male,Active
+Montez Ford,WWE,SmackDown,Male,Active
+Nathan Frazer,WWE,SmackDown,Male,Active
+R-Truth,WWE,SmackDown,Male,Active
+Randy Orton,WWE,SmackDown,Male,Active
+Rey Fenix,WWE,SmackDown,Male,Active
+Roman Reigns,WWE,SmackDown,Male,Active
+Sami Zayn,WWE,SmackDown,Male,Active
+Shinsuke Nakamura,WWE,SmackDown,Male,Active
+Solo Sikoa,WWE,SmackDown,Male,Active
+Talla Tonga,WWE,SmackDown,Male,Active
+Tama Tonga,WWE,SmackDown,Male,Active
+Tonga Loa,WWE,SmackDown,Male,Active
+Trick Williams,WWE,SmackDown,Male,Active
+Uncle Howdy,WWE,SmackDown,Male,Active
+Alba Fyre,WWE,SmackDown,Female,Active
+Alexa Bliss,WWE,SmackDown,Female,Active
+B-Fab,WWE,SmackDown,Female,Injured
+Bianca Belair,WWE,SmackDown,Female,Injured
+Candice LeRae,WWE,SmackDown,Female,Active
+Chelsea Green,WWE,SmackDown,Female,Injured
+Giulia,WWE,SmackDown,Female,Active
+Jade Cargill,WWE,SmackDown,Female,Active
+Jordynne Grace,WWE,SmackDown,Female,Active
+Kiana James,WWE,SmackDown,Female,Active
+Lash Legend,WWE,SmackDown,Female,Active
+Michin,WWE,SmackDown,Female,Injured
+Nia Jax,WWE,SmackDown,Female,Active
+Nikki Cross,WWE,SmackDown,Female,Active
+Piper Niven,WWE,SmackDown,Female,Injured
+Tiffany Stratton,WWE,SmackDown,Female,Active
+Zelina Vega,WWE,SmackDown,Female,Active
+Brock Lesnar,WWE,Free Agent,Male,Free Agent
+John Cena,WWE,Free Agent,Male,Free Agent
+Oba Femi,WWE,Free Agent,Male,Free Agent
+Omos,WWE,Free Agent,Male,Inactive
+Santos Escobar,WWE,Free Agent,Male,Free Agent
+The Rock,WWE,Free Agent,Male,Inactive
+AJ Lee,WWE,Free Agent,Female,Active
+Tamina,WWE,Free Agent,Female,Inactive
+Trish Stratus,WWE,Free Agent,Female,Active
+Andre Chase,WWE,NXT,Male,Active
+Brad Baylor,WWE,NXT,Male,Active
+Bronco Nima,WWE,NXT,Male,Active
+Brooks Jensen,WWE,NXT,Male,Active
+Channing Lorenzo,WWE,NXT,Male,Active
+Charlie Dempsey,WWE,NXT,Male,Active
+Cutler James,WWE,NXT,Male,Active
+Dante Chen,WWE,NXT,Male,Active
+Dion Lennox,WWE,NXT,Male,Active
+Ethan Page,WWE,NXT,Male,Active
+Hank Walker,WWE,NXT,Male,Active
+Jackson Drake,WWE,NXT,Male,Active
+Jasper Troy,WWE,NXT,Male,Active
+Joe Hendry,WWE,NXT,Male,Active
+Josh Briggs,WWE,NXT,Male,Active
+Kale Dixon,WWE,NXT,Male,Active
+Lexis King,WWE,NXT,Male,Active
+Luca Crusifino,WWE,NXT,Male,Active
+Lucien Price,WWE,NXT,Male,Active
+Malik Blade,WWE,NXT,Male,Injured
+Myles Borne,WWE,NXT,Male,Active
+Niko Vance,WWE,NXT,Male,Active
+Noam Dar,WWE,NXT,Male,Injured
+Oba Femi,WWE,NXT,Male,Active
+Osiris Griffin,WWE,NXT,Male,Active
+Ricky Saints,WWE,NXT,Male,Active
+Ricky Smokes,WWE,NXT,Male,Active
+Saquon Shugars,WWE,NXT,Male,Active
+Shawn Spears,WWE,NXT,Male,Active
+Tank Ledger,WWE,NXT,Male,Active
+Tavion Heights,WWE,NXT,Male,Active
+Tony D'Angelo,WWE,NXT,Male,Active
+Tyriek Igwe,WWE,NXT,Male,Active
+Tyson Dupont,WWE,NXT,Male,Active
+Uriah Connors,WWE,NXT,Male,Active
+Adrianna Rizzo,WWE,NXT,Female,Injured
+Arianna Grace,WWE,NXT,Female,Active
+Blake Monroe,WWE,NXT,Female,Active
+Carlee Bright,WWE,NXT,Female,Active
+Fallon Henley,WWE,NXT,Female,Active
+Izzi Dame,WWE,NXT,Female,Active
+Jacy Jayne,WWE,NXT,Female,Active
+Jaida Parker,WWE,NXT,Female,Active
+Karmen Petrovic,WWE,NXT,Female,Active
+Kelani Jordan,WWE,NXT,Female,Active
+Kendal Grey,WWE,NXT,Female,Active
+Lainey Reid,WWE,NXT,Female,Active
+Lola Vice,WWE,NXT,Female,Active
+Nikkita Lyons,WWE,NXT,Female,Active
+Sol Ruca,WWE,NXT,Female,Active
+Tatum Paxley,WWE,NXT,Female,Active
+Thea Hail,WWE,NXT,Female,Active
+Tyra Mae Steele,WWE,NXT,Female,Active
+Wendy Choo,WWE,NXT,Female,Active
+Wren Sinclair,WWE,NXT,Female,Active
+Zaria,WWE,NXT,Female,Active
+Aaron Solo,AEW,AEW,Male,Active
+Ace Austin,AEW,AEW,Male,Active
+Action Andretti,AEW,AEW,Male,Active
+Adam Cole,AEW,AEW,Male,Injured
+Adam Copeland,AEW,AEW,Male,Inactive
+Adam Page,AEW,AEW,Male,Active
+Alex Reynolds,AEW,AEW,Male,Active
+Andrade El Idolo,AEW,AEW,Male,Active
+Angelico,AEW,AEW,Male,Active
+Angelo Parker,AEW,AEW,Male,Active
+Anthony Bowens,AEW,AEW,Male,Active
+Anthony Ogogo,AEW,AEW,Male,Active
+AR Fox,AEW,AEW,Male,Active
+Ariya Daivari,AEW,AEW,Male,Active
+Austin Gunn,AEW,AEW,Male,Active
+Bandido,AEW,AEW,Male,Active
+Beast Mortos,AEW,AEW,Male,Active
+Big Bill,AEW,AEW,Male,Active
+Billy Gunn,AEW,AEW,Male,Inactive
+Bishop Kaun,AEW,AEW,Male,Active
+The Blade,AEW,AEW,Male,Inactive
+Blake Christian,AEW,AEW,Male,Active
+Bobby Lashley,AEW,AEW,Male,Injured
+Brandon Cutler,AEW,AEW,Male,Inactive
+Brian Cage,AEW,AEW,Male,Injured
+Brody King,AEW,AEW,Male,Active
+Bryan Keith,AEW,AEW,Male,Active
+Buddy Matthews,AEW,AEW,Male,Injured
+The Butcher,AEW,AEW,Male,Inactive
+Carlie Bravo,AEW,AEW,Male,Active
+Cash Wheeler,AEW,AEW,Male,Active
+Chris Jericho,AEW,AEW,Male,Inactive
+Christian Cage,AEW,AEW,Male,Inactive
+Claudio Castagnoli,AEW,AEW,Male,Active
+Cole Karter,AEW,AEW,Male,Active
+Colt Cabana,AEW,AEW,Male,Inactive
+Colten Gunn,AEW,AEW,Male,Injured
+Danhausen,AEW,AEW,Male,Inactive
+Daniel Garcia,AEW,AEW,Male,Active
+Dante Martin,AEW,AEW,Male,Active
+Darby Allin,AEW,AEW,Male,Active
+Darius Martin,AEW,AEW,Male,Active
+Dax Harwood,AEW,AEW,Male,Active
+Dezmond Xavier,AEW,AEW,Male,Active
+Dralistico,AEW,AEW,Male,Injured
+Dustin Rhodes,AEW,AEW,Male,Injured
+Tommy Billington,AEW,AEW,Male,Active
+Eddie Kingston,AEW,AEW,Male,Active
+El Clon,AEW,AEW,Male,Active
+Evil Uno,AEW,AEW,Male,Active
+Griff Garrison,AEW,AEW,Male,Active
+Hechicero,AEW,AEW,Male,Active
+Hologram,AEW,AEW,Male,Injured
+Hook,AEW,AEW,Male,Active
+Isiah Kassidy,AEW,AEW,Male,Active
+Jack Perry,AEW,AEW,Male,Active
+Jake Doyle,AEW,AEW,Male,Injured
+James Drake,AEW,AEW,Male,Active
+Jay Lethal,AEW,AEW,Male,Active
+Jay White,AEW,AEW,Male,Injured
+Jeff Jarrett,AEW,AEW,Male,Inactive
+John Silver,AEW,AEW,Male,Active
+Johnny TV,AEW,AEW,Male,Active
+Jon Moxley,AEW,AEW,Male,Active
+Josh Alexander,AEW,AEW,Male,Active
+Josh Woods,AEW,AEW,Male,Active
+Juice Robinson,AEW,AEW,Male,Active
+Katsuyori Shibata,AEW,AEW,Male,Active
+Kazuchika Okada,AEW,AEW,Male,Active
+Keith Lee,AEW,AEW,Male,Inactive
+Kenny Omega,AEW,AEW,Male,Active
+Kevin Knight,AEW,AEW,Male,Active
+Kip Sabian,AEW,AEW,Male,Inactive
+Komander,AEW,AEW,Male,Active
+Konosuke Takeshita,AEW,AEW,Male,Active
+Kota Ibushi,AEW,AEW,Male,Injured
+Kyle Fletcher,AEW,AEW,Male,Active
+Kyle O'Reilly,AEW,AEW,Male,Active
+Lance Archer,AEW,AEW,Male,Active
+Lee Johnson,AEW,AEW,Male,Active
+Lee Moriarty,AEW,AEW,Male,Active
+Lio Rush,AEW,AEW,Male,Active
+Luchasaurus,AEW,AEW,Male,Injured
+Mansoor,AEW,AEW,Male,Active
+Mark Briscoe,AEW,AEW,Male,Active
+Mark Davis,AEW,AEW,Male,Active
+Marq Quen,AEW,AEW,Male,Active
+Mascara Dorada,AEW,AEW,Male,Inactive
+Marshall Von Erich,AEW,AEW,Male,Active
+Mason Madden,AEW,AEW,Male,Active
+Matt Menard,AEW,AEW,Male,Active
+Matt Sydal,AEW,AEW,Male,Inactive
+Matthew Jackson,AEW,AEW,Male,Active
+Max Caster,AEW,AEW,Male,Active
+Michael Nakazawa,AEW,AEW,Male,Inactive
+Mike Bailey,AEW,AEW,Male,Active
+Mike Bennett,AEW,AEW,Male,Inactive
+MJF,AEW,AEW,Male,Active
+MVP,AEW,AEW,Male,Active
+Myron Reed,AEW,AEW,Male,Active
+Nicholas Jackson,AEW,AEW,Male,Active
+Nick Comoroto,AEW,AEW,Male,Inactive
+Nick Wayne,AEW,AEW,Male,Active
+Orange Cassidy,AEW,AEW,Male,Active
+Ortiz,AEW,AEW,Male,Active
+PAC,AEW,AEW,Male,Active
+Paul Wight,AEW,AEW,Male,Inactive
+Peter Avalon,AEW,AEW,Male,Active
+Preston Vance,AEW,AEW,Male,Active
+Tommaso Ciampa,AEW,AEW,Male,Active
+Ricochet,AEW,AEW,Male,Active
+Rocky Romero,AEW,AEW,Male,Active
+Roderick Strong,AEW,AEW,Male,Active
+Ross Von Erich,AEW,AEW,Male,Active
+Rush,AEW,AEW,Male,Injured
+Sammy Guevara,AEW,AEW,Male,Active
+Samoa Joe,AEW,AEW,Male,Active
+Satnam Singh,AEW,AEW,Male,Active
+Scorpio Sky,AEW,AEW,Male,Active
+Serpentico,AEW,AEW,Male,Active
+Shane Taylor,AEW,AEW,Male,Active
+Shawn Dean,AEW,AEW,Male,Active
+Shelton Benjamin,AEW,AEW,Male,Active
+Swerve Strickland,AEW,AEW,Male,Active
+Toa Liona,AEW,AEW,Male,Active
+Tony Nese,AEW,AEW,Male,Active
+Trent Beretta,AEW,AEW,Male,Active
+Truth Magnum,AEW,AEW,Male,Active
+Turbo Floyd,AEW,AEW,Male,Active
+Wardlow,AEW,AEW,Male,Injured
+Wheeler Yuta,AEW,AEW,Male,Active
+Will Ospreay,AEW,AEW,Male,Injured
+Zachary Wentz,AEW,AEW,Male,Active
+Zack Gibson,AEW,AEW,Male,Active
+Alex Windsor,AEW,AEW,Female,Active
+Anna Jay,AEW,AEW,Female,Active
+Athena,AEW,AEW,Female,Active
+Billie Starkz,AEW,AEW,Female,Active
+Cassie Lee,AEW,AEW,Female,Active
+Charlette Renegade,AEW,AEW,Female,Active
+Britt Baker,AEW,AEW,Female,Inactive
+Deonna Purrazzo,AEW,AEW,Female,Active
+Diamante,AEW,AEW,Female,Active
+Emi Sakura,AEW,AEW,Female,Inactive
+Harley Cameron,AEW,AEW,Female,Active
+Hikaru Shida,AEW,AEW,Female,Inactive
+Hyan,AEW,AEW,Female,Active
+Jamie Hayter,AEW,AEW,Female,Active
+Jessie McKay,AEW,AEW,Female,Active
+Julia Hart,AEW,AEW,Female,Active
+Kamille,AEW,AEW,Female,Inactive
+Kris Statlander,AEW,AEW,Female,Active
+Lady Frost,AEW,AEW,Female,Inactive
+Leila Grey,AEW,AEW,Female,Injured
+Lena Kross,AEW,AEW,Female,Active
+Madison Rayne,AEW,AEW,Female,Active
+Marina Shafir,AEW,AEW,Female,Active
+Maya World,AEW,AEW,Female,Active
+Megan Bayne,AEW,AEW,Female,Active
+Mercedes Mone,AEW,AEW,Female,Active
+Mina Shirakawa,AEW,AEW,Female,Active
+Nyla Rose,AEW,AEW,Female,Inactive
+Penelope Ford,AEW,AEW,Female,Injured
+Persephone,AEW,AEW,Female,Active
+Queen Aminata,AEW,AEW,Female,Active
+Rachel Ellering,AEW,AEW,Female,Active
+Rebel,AEW,AEW,Female,Inactive
+Red Velvet,AEW,AEW,Female,Active
+Riho,AEW,AEW,Female,Active
+Robyn Renegade,AEW,AEW,Female,Active
+Ruby Soho,AEW,AEW,Female,Inactive
+Serena Deeb,AEW,AEW,Female,Active
+Skye Blue,AEW,AEW,Female,Active
+Tatevik,AEW,AEW,Female,Active
+Tay Melo,AEW,AEW,Female,Active
+Taya Valkyrie,AEW,AEW,Female,Active
+Thekla,AEW,AEW,Female,Active
+Thunder Rosa,AEW,AEW,Female,Active
+Toni Storm,AEW,AEW,Female,Active
+Willow Nightingale,AEW,AEW,Female,Active
+Yuka Sakazaki,AEW,AEW,Female,Inactive
+Zayda Steel,AEW,AEW,Female,Active
