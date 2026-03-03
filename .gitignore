@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Scraper cache and output
+cache/
+output/
+*.html
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data artifacts
+unresolved_wrestlers.txt
+*.log
+
+# Docker
+.docker/
+
+# Node (Phase 2+)
+node_modules/
+.next/
+dist/

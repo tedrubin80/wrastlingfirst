@@ -1,0 +1,91 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ringside-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ringside
+      POSTGRES_PASSWORD: ringside
+      POSTGRES_DB: ringside
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ringside"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ringside-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: ringside-seed
+    command: python seed.py
+    environment:
+      DATABASE_URL: postgresql://ringside:ringside@db:5432/ringside
+    volumes:
+      - ./seed.py:/app/seed.py:ro
+      - ./wrestlers_roster_2026.csv:/app/wrestlers_roster_2026.csv:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - seed
+
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: ringside-scraper
+    command: python -m scraper
+    environment:
+      DATABASE_URL: postgresql://ringside:ringside@db:5432/ringside
+    volumes:
+      - ./scraper:/app/scraper:ro
+      - scraper-cache:/app/cache
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - scrape
+
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: ringside-etl
+    command: python -m etl
+    environment:
+      DATABASE_URL: postgresql://ringside:ringside@db:5432/ringside
+    volumes:
+      - ./etl:/app/etl:ro
+      - scraper-cache:/app/cache:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - etl
+
+volumes:
+  pgdata:
+  redisdata:
+  scraper-cache:
