@@ -36,9 +36,10 @@ IMPORTERS = {
     "wwe": ("importers.kaggle_wwe", "WWE SQLite (88K matches)"),
     "champion": ("importers.kaggle_champion", "WWE Champion (1K matches)"),
     "ratings": ("importers.kaggle_ratings", "WWE Ratings (8K matches)"),
+    "aew": ("importers.kaggle_aew", "AEW Events & Ratings (4K matches)"),
 }
 
-IMPORT_ORDER = ["profightdb", "wwe", "champion", "ratings"]
+IMPORT_ORDER = ["profightdb", "wwe", "champion", "ratings", "aew"]
 
 
 def main():
