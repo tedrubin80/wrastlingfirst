@@ -299,6 +299,51 @@ CREATE INDEX idx_predictions_created ON predictions (created_at DESC);
 CREATE INDEX idx_predictions_model ON predictions (model_version);
 
 -- ============================================================================
+-- ALIGNMENT (HEEL / FACE / TWEENER) TRACKING
+-- ============================================================================
+
+CREATE TYPE alignment_type AS ENUM ('face', 'heel', 'tweener');
+
+-- Current and historical alignment snapshots per wrestler
+CREATE TABLE wrestler_alignments (
+    id              SERIAL PRIMARY KEY,
+    wrestler_id     INTEGER NOT NULL REFERENCES wrestlers(id) ON DELETE CASCADE,
+    alignment       alignment_type NOT NULL,
+    effective_date  DATE NOT NULL,
+    source          TEXT,  -- e.g. 'smackdown_hotel', 'smark_out_moment', 'manual'
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT uq_alignment_wrestler_date UNIQUE (wrestler_id, effective_date)
+);
+
+COMMENT ON TABLE wrestler_alignments IS 'Point-in-time alignment snapshots — face/heel/tweener per wrestler';
+
+CREATE INDEX idx_alignments_wrestler ON wrestler_alignments (wrestler_id);
+CREATE INDEX idx_alignments_date ON wrestler_alignments (effective_date DESC);
+CREATE INDEX idx_alignments_wrestler_date ON wrestler_alignments (wrestler_id, effective_date DESC);
+
+-- Alignment turn events (face→heel, heel→face, etc.)
+CREATE TABLE alignment_turns (
+    id              SERIAL PRIMARY KEY,
+    wrestler_id     INTEGER NOT NULL REFERENCES wrestlers(id) ON DELETE CASCADE,
+    from_alignment  alignment_type NOT NULL,
+    to_alignment    alignment_type NOT NULL,
+    turn_date       DATE NOT NULL,
+    event_id        INTEGER REFERENCES events(id),
+    description     TEXT,
+    source          TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT chk_turn_different CHECK (from_alignment <> to_alignment)
+);
+
+COMMENT ON TABLE alignment_turns IS 'Heel/face turn events with date, context, and source attribution';
+
+CREATE INDEX idx_turns_wrestler ON alignment_turns (wrestler_id);
+CREATE INDEX idx_turns_date ON alignment_turns (turn_date DESC);
+CREATE INDEX idx_turns_wrestler_date ON alignment_turns (wrestler_id, turn_date DESC);
+
+-- ============================================================================
 -- UPDATED_AT TRIGGER
 -- ============================================================================
 
