@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import PageContainer from "@/components/PageContainer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -23,7 +24,7 @@ export default async function EventDetailPage({
   if (!event) notFound();
 
   return (
-    <div>
+    <PageContainer>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -111,6 +112,6 @@ export default async function EventDetailPage({
           No match card available for this event.
         </p>
       )}
-    </div>
+    </PageContainer>
   );
 }

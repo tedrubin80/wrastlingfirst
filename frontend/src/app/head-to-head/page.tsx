@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import WrestlerSearch from "@/components/search/WrestlerSearch";
 import { getHeadToHead } from "@/lib/api";
+import PageContainer from "@/components/PageContainer";
 
 interface Wrestler {
   id: number;
@@ -41,7 +42,7 @@ export default function HeadToHeadPage() {
   ) as number[];
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <PageContainer>
       <h1 className="text-3xl font-bold mb-2">Head-to-Head</h1>
       <p className="text-zinc-500 mb-8">
         Compare two wrestlers — series record and match history.
@@ -221,6 +222,6 @@ export default function HeadToHeadPage() {
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

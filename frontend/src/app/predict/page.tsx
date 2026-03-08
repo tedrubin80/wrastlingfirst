@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import WrestlerSearch from "@/components/search/WrestlerSearch";
 import { predict } from "@/lib/api";
+import PageContainer from "@/components/PageContainer";
 
 interface Wrestler {
   id: number;
@@ -60,7 +61,7 @@ export default function PredictPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <PageContainer>
       <h1 className="text-3xl font-bold mb-2">Match Prediction</h1>
       <p className="text-zinc-500 mb-8">
         Select 2-8 wrestlers and set the match context to get win probabilities.
@@ -233,6 +234,6 @@ export default function PredictPage() {
           </p>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

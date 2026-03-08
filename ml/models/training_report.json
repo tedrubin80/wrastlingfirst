@@ -1,0 +1,126 @@
+{
+  "models": [
+    {
+      "name": "logistic_regression",
+      "validation": {
+        "model": "logistic_regression",
+        "split": "validation",
+        "accuracy": 0.8022,
+        "auc_roc": 0.8724,
+        "log_loss": 0.4651
+      },
+      "test": {
+        "model": "logistic_regression",
+        "split": "test",
+        "accuracy": 0.6426,
+        "auc_roc": 0.6976,
+        "log_loss": 0.6462
+      },
+      "feature_importance": [
+        {
+          "feature": "current_loss_streak",
+          "importance": 1.8889
+        },
+        {
+          "feature": "current_win_streak",
+          "importance": 1.3478
+        },
+        {
+          "feature": "h2h_win_rate",
+          "importance": 0.9832
+        },
+        {
+          "feature": "match_type_win_rate",
+          "importance": 0.5751
+        },
+        {
+          "feature": "win_rate_30d",
+          "importance": 0.2072
+        },
+        {
+          "feature": "is_title_match",
+          "importance": 0.1979
+        },
+        {
+          "feature": "win_rate_365d",
+          "importance": 0.1778
+        },
+        {
+          "feature": "is_royal_rumble",
+          "importance": 0.1631
+        },
+        {
+          "feature": "is_singles",
+          "importance": 0.1347
+        },
+        {
+          "feature": "promotion_win_rate",
+          "importance": 0.1198
+        }
+      ]
+    },
+    {
+      "name": "xgboost",
+      "validation": {
+        "model": "xgboost",
+        "split": "validation",
+        "accuracy": 0.8645,
+        "auc_roc": 0.9518,
+        "log_loss": 0.2761
+      },
+      "test": {
+        "model": "xgboost",
+        "split": "test",
+        "accuracy": 0.6616,
+        "auc_roc": 0.718,
+        "log_loss": 0.6363
+      },
+      "feature_importance": [
+        {
+          "feature": "current_win_streak",
+          "importance": 0.3094
+        },
+        {
+          "feature": "current_loss_streak",
+          "importance": 0.217
+        },
+        {
+          "feature": "days_since_last_match",
+          "importance": 0.1294
+        },
+        {
+          "feature": "h2h_win_rate",
+          "importance": 0.0914
+        },
+        {
+          "feature": "is_royal_rumble",
+          "importance": 0.025
+        },
+        {
+          "feature": "match_type_win_rate",
+          "importance": 0.0235
+        },
+        {
+          "feature": "win_rate_90d",
+          "importance": 0.0188
+        },
+        {
+          "feature": "is_title_match",
+          "importance": 0.0162
+        },
+        {
+          "feature": "is_champion",
+          "importance": 0.0159
+        },
+        {
+          "feature": "card_position",
+          "importance": 0.0153
+        }
+      ]
+    }
+  ],
+  "timestamp": "2026-03-08T20:35:19.519136",
+  "best_model": "xgboost",
+  "best_accuracy": 0.6616,
+  "best_auc": 0.718
+}

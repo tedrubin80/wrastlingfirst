@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import WrestlerCharts from "@/components/WrestlerCharts";
+import PageContainer from "@/components/PageContainer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -91,7 +92,7 @@ export default async function WrestlerProfilePage({
   };
 
   return (
-    <div>
+    <PageContainer>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -222,7 +223,7 @@ export default async function WrestlerProfilePage({
       ) : (
         <p className="text-zinc-500">No match history available.</p>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

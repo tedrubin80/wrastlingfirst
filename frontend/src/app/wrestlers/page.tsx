@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import PageContainer from "@/components/PageContainer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -52,7 +53,7 @@ export default async function WrestlersPage({
   };
 
   return (
-    <div>
+    <PageContainer>
       <h1 className="text-3xl font-bold mb-6">Wrestlers</h1>
 
       {/* Filters */}
@@ -104,7 +105,7 @@ export default async function WrestlersPage({
           No wrestlers found. Try adjusting your filters.
         </p>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

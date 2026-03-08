@@ -368,82 +368,71 @@ def build_features(
 
     # === Card Position Momentum ===
     logger.info("computing_card_position_momentum")
-    # Rolling average card position (last 10 matches) — measures push trajectory
-    for wrestler_id, group in df.groupby("wrestler_id"):
-        idx = group.index
-        positions = features.loc[idx, "card_position"].values
-        rolling_pos = []
-        for i in range(len(positions)):
-            window = positions[max(0, i - 10):i]
-            if len(window) > 0:
-                rolling_pos.append(float(np.mean(window)))
-            else:
-                rolling_pos.append(0.5)
-        features.loc[idx, "card_position_momentum"] = rolling_pos
+    # Rolling average card position (last 10 matches) — vectorized per wrestler
+    features["card_position_momentum"] = (
+        features.groupby(df["wrestler_id"])["card_position"]
+        .transform(lambda s: s.shift(1).rolling(10, min_periods=1).mean())
+        .fillna(0.5)
+    )
 
     # === Head-to-Head ===
     logger.info("computing_head_to_head")
-    # For each match, compute record vs opponents in that match
-    match_groups = df.groupby("match_id")
-    for match_id, match_group in match_groups:
-        if len(match_group) != 2:
-            continue  # Only compute h2h for singles matches
+    # Pre-build a dict of (pair) -> list of (date, w1_won) for O(1) lookups
+    # Only for 2-person matches
+    singles_matches = df.groupby("match_id").filter(lambda g: len(g) == 2)
+    singles_sorted = singles_matches.sort_values("event_date")
 
+    # Build pair history incrementally
+    from collections import defaultdict
+    pair_history = defaultdict(lambda: {"wins": defaultdict(int), "total": 0})
+
+    h2h_win_rate = pd.Series(0.5, index=df.index)
+    h2h_matches_col = pd.Series(0, index=df.index, dtype=int)
+
+    for match_id, match_group in singles_sorted.groupby("match_id", sort=False):
         rows = match_group.index.tolist()
+        if len(rows) != 2:
+            continue
+
         w1_id = match_group.loc[rows[0], "wrestler_id"]
         w2_id = match_group.loc[rows[1], "wrestler_id"]
-        match_date = match_group.loc[rows[0], "event_date"]
+        w1_result = match_group.loc[rows[0], "result"]
 
-        # Find prior matchups
-        prior = df[
-            (df["event_date"] < match_date)
-            & (df["match_id"].isin(
-                df[(df["wrestler_id"] == w1_id)]["match_id"]
-            ))
-            & (df["wrestler_id"] == w2_id)
-        ]
+        pair_key = (min(w1_id, w2_id), max(w1_id, w2_id))
+        hist = pair_history[pair_key]
 
-        if len(prior) > 0:
-            # w1's perspective
-            w1_prior_match_ids = prior["match_id"].unique()
-            w1_results = df[
-                (df["match_id"].isin(w1_prior_match_ids))
-                & (df["wrestler_id"] == w1_id)
-            ]
-            w1_h2h_wins = (w1_results["result"] == "win").sum()
-            w1_h2h_total = len(w1_results)
-            h2h_rate_w1 = w1_h2h_wins / w1_h2h_total if w1_h2h_total > 0 else 0.5
+        if hist["total"] > 0:
+            w1_wins = hist["wins"][w1_id]
+            w1_rate = w1_wins / hist["total"]
+            h2h_win_rate.loc[rows[0]] = w1_rate
+            h2h_win_rate.loc[rows[1]] = 1 - w1_rate
+            h2h_matches_col.loc[rows[0]] = hist["total"]
+            h2h_matches_col.loc[rows[1]] = hist["total"]
 
-            features.loc[rows[0], "h2h_win_rate"] = h2h_rate_w1
-            features.loc[rows[1], "h2h_win_rate"] = 1 - h2h_rate_w1
-            features.loc[rows[0], "h2h_matches"] = w1_h2h_total
-            features.loc[rows[1], "h2h_matches"] = w1_h2h_total
+        # Update history AFTER computing features (no future leakage)
+        if w1_result == "win":
+            hist["wins"][w1_id] += 1
         else:
-            features.loc[rows[0], "h2h_win_rate"] = 0.5
-            features.loc[rows[1], "h2h_win_rate"] = 0.5
-            features.loc[rows[0], "h2h_matches"] = 0
-            features.loc[rows[1], "h2h_matches"] = 0
+            hist["wins"][w2_id] += 1
+        hist["total"] += 1
 
-    features["h2h_win_rate"] = features.get("h2h_win_rate", pd.Series(0.5, index=df.index)).fillna(0.5)
-    features["h2h_matches"] = features.get("h2h_matches", pd.Series(0, index=df.index)).fillna(0)
+    features["h2h_win_rate"] = h2h_win_rate
+    features["h2h_matches"] = h2h_matches_col
 
     # === Face vs Heel Matchup ===
     logger.info("computing_face_heel_matchup")
-    # For singles matches, determine if this is a face-vs-heel matchup
-    for match_id, match_group in match_groups:
-        if len(match_group) != 2:
-            continue
-        rows = match_group.index.tolist()
-        a1 = features.loc[rows[0], "alignment"] if "alignment" in features.columns else 1
-        a2 = features.loc[rows[1], "alignment"] if "alignment" in features.columns else 1
-        # face(0) vs heel(2) = classic matchup
-        is_face_heel = int((a1 == 0 and a2 == 2) or (a1 == 2 and a2 == 0))
-        features.loc[rows[0], "face_heel_matchup"] = is_face_heel
-        features.loc[rows[1], "face_heel_matchup"] = is_face_heel
-
-    features["face_heel_matchup"] = features.get(
-        "face_heel_matchup", pd.Series(0, index=df.index)
-    ).fillna(0)
+    # Vectorized: join each wrestler's alignment with their opponent's
+    features["face_heel_matchup"] = 0
+    if "alignment" in features.columns:
+        for match_id, match_group in singles_sorted.groupby("match_id", sort=False):
+            rows = match_group.index.tolist()
+            if len(rows) != 2:
+                continue
+            a1 = features.loc[rows[0], "alignment"]
+            a2 = features.loc[rows[1], "alignment"]
+            is_fh = int((a1 == 0 and a2 == 2) or (a1 == 2 and a2 == 0))
+            features.loc[rows[0], "face_heel_matchup"] = is_fh
+            features.loc[rows[1], "face_heel_matchup"] = is_fh
 
     # Fill remaining NaN
     features = features.fillna(0)

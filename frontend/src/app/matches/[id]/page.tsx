@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import PageContainer from "@/components/PageContainer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -23,7 +24,7 @@ export default async function MatchDetailPage({
   if (!match) notFound();
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <PageContainer>
       <div className="mb-6">
         <Link
           href={`/events/${match.event_id}`}
@@ -100,6 +101,6 @@ export default async function MatchDetailPage({
           )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
