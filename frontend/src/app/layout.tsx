@@ -15,9 +15,30 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Ringside Analytics",
+  title: {
+    default: "Ringside Analytics",
+    template: "%s | Ringside Analytics",
+  },
   description:
-    "40+ years of pro wrestling data — match history, career stats, and ML-powered predictions",
+    "40+ years of pro wrestling data — match history, career stats, and ML-powered predictions across WWE, AEW, WCW, ECW, and TNA.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  openGraph: {
+    type: "website",
+    siteName: "Ringside Analytics",
+    title: "Ringside Analytics",
+    description:
+      "40+ years of pro wrestling data — match history, career stats, and ML-powered predictions.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ringside Analytics",
+    description:
+      "40+ years of pro wrestling data — match history, career stats, and ML-powered predictions.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

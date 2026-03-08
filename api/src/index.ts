@@ -9,6 +9,8 @@ import eventsRouter from './routes/events';
 import headToHeadRouter from './routes/headToHead';
 import titlesRouter from './routes/titles';
 import predictRouter from './routes/predict';
+import chartsRouter from './routes/charts';
+import metricsRouter from './routes/metrics';
 
 const app = express();
 const port = parseInt(process.env.PORT || '3001', 10);
@@ -33,6 +35,9 @@ app.use('/api/events', eventsRouter);
 app.use('/api/head-to-head', headToHeadRouter);
 app.use('/api/titles', titlesRouter);
 app.use('/api/predict', predictRouter);
+app.use('/api/wrestlers', chartsRouter);
+
+app.use('/api/metrics', metricsRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

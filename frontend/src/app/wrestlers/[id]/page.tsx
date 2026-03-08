@@ -1,6 +1,8 @@
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import WrestlerCharts from "@/components/WrestlerCharts";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -40,6 +42,24 @@ async function fetchTitles(id: string) {
   return json.data;
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const wrestler = await fetchWrestler(id);
+  if (!wrestler) return { title: "Wrestler Not Found" };
+  return {
+    title: wrestler.ring_name,
+    description: `Career stats, match history, and analytics for ${wrestler.ring_name}. ${wrestler.total_matches} matches, ${wrestler.total_wins} wins.`,
+    openGraph: {
+      title: `${wrestler.ring_name} | Ringside Analytics`,
+      description: `Career stats and match history for ${wrestler.ring_name}`,
+    },
+  };
+}
+
 export default async function WrestlerProfilePage({
   params,
 }: {
@@ -60,8 +80,22 @@ export default async function WrestlerProfilePage({
       ? ((wrestler.total_wins / wrestler.total_matches) * 100).toFixed(1)
       : "0";
 
+  // JSON-LD structured data for search engines — data is from our own DB, not user input
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: wrestler.ring_name,
+    alternateName: wrestler.real_name || undefined,
+    description: `Professional wrestler with ${wrestler.total_matches} career matches`,
+    jobTitle: "Professional Wrestler",
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -113,6 +147,15 @@ export default async function WrestlerProfilePage({
       )}
 
       <Separator className="bg-zinc-800 mb-8" />
+
+      {/* Charts Section */}
+      <WrestlerCharts
+        wrestlerId={wrestler.id}
+        matchTypeBreakdown={stats?.match_type_breakdown || []}
+        titleReigns={titles}
+      />
+
+      <Separator className="bg-zinc-800 my-8" />
 
       {/* Title History */}
       {titles.length > 0 && (

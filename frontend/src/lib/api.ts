@@ -40,6 +40,23 @@ export function getWrestlerTitles(id: number) {
   return apiFetch<any>(`/api/wrestlers/${id}/titles`);
 }
 
+// Charts
+export function getWrestlerWinRateChart(id: number) {
+  return apiFetch<any>(`/api/wrestlers/${id}/charts/win-rate`);
+}
+
+export function getWrestlerMomentumChart(id: number) {
+  return apiFetch<any>(`/api/wrestlers/${id}/charts/momentum`);
+}
+
+export function getWrestlerStreaksChart(id: number) {
+  return apiFetch<any>(`/api/wrestlers/${id}/charts/streaks`);
+}
+
+export function getWrestlerActivityChart(id: number) {
+  return apiFetch<any>(`/api/wrestlers/${id}/charts/activity`);
+}
+
 // Matches
 export function getMatches(params?: Record<string, string>) {
   const qs = params ? '?' + new URLSearchParams(params).toString() : '';
