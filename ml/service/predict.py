@@ -23,16 +23,30 @@ REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 
 # Feature names must match training
 FEATURE_COLUMNS = [
+    # Win momentum (5)
     "win_rate_30d", "win_rate_90d", "win_rate_365d",
     "current_win_streak", "current_loss_streak",
+    # Event context (4)
     "is_ppv", "is_title_match", "card_position", "event_tier",
+    # Match type (9)
     "match_type_win_rate",
     "is_singles", "is_tag_team", "is_triple_threat", "is_fatal_four_way",
     "is_ladder", "is_cage", "is_hell_in_a_cell", "is_royal_rumble",
+    # Title proximity (3)
     "is_champion", "num_defenses", "days_since_title_match",
+    # Career phase (3)
     "years_active", "matches_last_90d", "days_since_last_match",
+    # Promotion (1)
     "promotion_win_rate",
+    # Head-to-head (2)
     "h2h_win_rate", "h2h_matches",
+    # Alignment (6)
+    "alignment", "is_face", "is_heel",
+    "days_since_turn", "turns_12m", "face_heel_matchup",
+    # Match quality (1)
+    "avg_match_rating",
+    # Card position momentum (1)
+    "card_position_momentum",
 ]
 
 # Human-readable factor explanations
@@ -56,6 +70,14 @@ FACTOR_LABELS = {
     "promotion_win_rate": "Win rate in this promotion",
     "h2h_win_rate": "Head-to-head record vs opponent",
     "h2h_matches": "Number of prior meetings",
+    "alignment": "Current alignment (face/tweener/heel)",
+    "is_face": "Wrestling as a face (fan favorite)",
+    "is_heel": "Wrestling as a heel (villain)",
+    "days_since_turn": "Days since last alignment turn",
+    "turns_12m": "Alignment turns in last 12 months",
+    "face_heel_matchup": "Classic face vs heel matchup",
+    "avg_match_rating": "Average match quality rating",
+    "card_position_momentum": "Card position trend (push trajectory)",
 }
 
 

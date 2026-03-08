@@ -64,6 +64,26 @@ def load_title_data(conn: psycopg2.extensions.connection) -> pd.DataFrame:
     return pd.read_sql(query, conn)
 
 
+def load_alignment_data(conn: psycopg2.extensions.connection) -> pd.DataFrame:
+    """Load alignment snapshots and turns for alignment features."""
+    query = """
+    SELECT wrestler_id, alignment, effective_date
+    FROM wrestler_alignments
+    ORDER BY wrestler_id, effective_date
+    """
+    return pd.read_sql(query, conn)
+
+
+def load_alignment_turns(conn: psycopg2.extensions.connection) -> pd.DataFrame:
+    """Load alignment turn events."""
+    query = """
+    SELECT wrestler_id, from_alignment, to_alignment, turn_date
+    FROM alignment_turns
+    ORDER BY wrestler_id, turn_date
+    """
+    return pd.read_sql(query, conn)
+
+
 def compute_rolling_win_rate(
     group: pd.DataFrame, window_days: int, date_col: str = "event_date"
 ) -> pd.Series:
@@ -130,7 +150,12 @@ def compute_match_type_win_rate(df: pd.DataFrame) -> pd.Series:
     return results
 
 
-def build_features(df: pd.DataFrame, title_df: pd.DataFrame) -> pd.DataFrame:
+def build_features(
+    df: pd.DataFrame,
+    title_df: pd.DataFrame,
+    alignment_df: pd.DataFrame | None = None,
+    turns_df: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     """Build the full feature matrix from raw match data."""
     logger.info("building_features", total_records=len(df))
 
@@ -253,6 +278,109 @@ def build_features(df: pd.DataFrame, title_df: pd.DataFrame) -> pd.DataFrame:
 
     features["promotion_win_rate"] = features["promotion_win_rate"].fillna(0.5)
 
+    # === Alignment Features ===
+    logger.info("computing_alignment_features")
+    if alignment_df is not None and len(alignment_df) > 0:
+        alignment_df = alignment_df.copy()
+        alignment_df["effective_date"] = pd.to_datetime(alignment_df["effective_date"])
+        alignment_map = {"face": 0, "tweener": 1, "heel": 2}
+
+        for wrestler_id, group in df.groupby("wrestler_id"):
+            idx = group.index
+            w_align = alignment_df[alignment_df["wrestler_id"] == wrestler_id].sort_values("effective_date")
+
+            if len(w_align) == 0:
+                features.loc[idx, "alignment"] = 1  # unknown → tweener
+                features.loc[idx, "is_face"] = 0
+                features.loc[idx, "is_heel"] = 0
+                continue
+
+            # For each match, find most recent alignment
+            for row_idx, row in group.iterrows():
+                match_date = row["event_date"]
+                prior = w_align[w_align["effective_date"] <= match_date]
+                if len(prior) > 0:
+                    current = prior.iloc[-1]["alignment"]
+                    features.loc[row_idx, "alignment"] = alignment_map.get(current, 1)
+                    features.loc[row_idx, "is_face"] = int(current == "face")
+                    features.loc[row_idx, "is_heel"] = int(current == "heel")
+                else:
+                    features.loc[row_idx, "alignment"] = 1
+                    features.loc[row_idx, "is_face"] = 0
+                    features.loc[row_idx, "is_heel"] = 0
+    else:
+        features["alignment"] = 1
+        features["is_face"] = 0
+        features["is_heel"] = 0
+
+    # Turn recency and frequency
+    if turns_df is not None and len(turns_df) > 0:
+        turns_df = turns_df.copy()
+        turns_df["turn_date"] = pd.to_datetime(turns_df["turn_date"])
+
+        for wrestler_id, group in df.groupby("wrestler_id"):
+            idx = group.index
+            w_turns = turns_df[turns_df["wrestler_id"] == wrestler_id].sort_values("turn_date")
+
+            for row_idx, row in group.iterrows():
+                match_date = row["event_date"]
+                prior_turns = w_turns[w_turns["turn_date"] < match_date]
+
+                if len(prior_turns) > 0:
+                    last_turn = prior_turns.iloc[-1]["turn_date"]
+                    features.loc[row_idx, "days_since_turn"] = (match_date - last_turn).days
+                else:
+                    features.loc[row_idx, "days_since_turn"] = 999
+
+                # Turns in last 12 months
+                cutoff = match_date - pd.Timedelta(days=365)
+                features.loc[row_idx, "turns_12m"] = len(
+                    prior_turns[prior_turns["turn_date"] >= cutoff]
+                )
+    else:
+        features["days_since_turn"] = 999
+        features["turns_12m"] = 0
+
+    # === Match Rating History ===
+    logger.info("computing_rating_features")
+    # Average match rating as a proxy for push/booking quality
+    for wrestler_id, group in df.groupby("wrestler_id"):
+        idx = group.index
+        ratings = group["rating"].values
+        running_sum = 0.0
+        running_count = 0
+        avg_ratings = []
+
+        for i in range(len(group)):
+            # Use pre-match average (shifted by 1)
+            if running_count > 0:
+                avg_ratings.append(running_sum / running_count)
+            else:
+                avg_ratings.append(0.0)
+
+            if pd.notna(ratings[i]) and ratings[i] > 0:
+                running_sum += ratings[i]
+                running_count += 1
+
+        features.loc[idx, "avg_match_rating"] = avg_ratings
+
+    features["avg_match_rating"] = features["avg_match_rating"].fillna(0)
+
+    # === Card Position Momentum ===
+    logger.info("computing_card_position_momentum")
+    # Rolling average card position (last 10 matches) — measures push trajectory
+    for wrestler_id, group in df.groupby("wrestler_id"):
+        idx = group.index
+        positions = features.loc[idx, "card_position"].values
+        rolling_pos = []
+        for i in range(len(positions)):
+            window = positions[max(0, i - 10):i]
+            if len(window) > 0:
+                rolling_pos.append(float(np.mean(window)))
+            else:
+                rolling_pos.append(0.5)
+        features.loc[idx, "card_position_momentum"] = rolling_pos
+
     # === Head-to-Head ===
     logger.info("computing_head_to_head")
     # For each match, compute record vs opponents in that match
@@ -299,6 +427,24 @@ def build_features(df: pd.DataFrame, title_df: pd.DataFrame) -> pd.DataFrame:
     features["h2h_win_rate"] = features.get("h2h_win_rate", pd.Series(0.5, index=df.index)).fillna(0.5)
     features["h2h_matches"] = features.get("h2h_matches", pd.Series(0, index=df.index)).fillna(0)
 
+    # === Face vs Heel Matchup ===
+    logger.info("computing_face_heel_matchup")
+    # For singles matches, determine if this is a face-vs-heel matchup
+    for match_id, match_group in match_groups:
+        if len(match_group) != 2:
+            continue
+        rows = match_group.index.tolist()
+        a1 = features.loc[rows[0], "alignment"] if "alignment" in features.columns else 1
+        a2 = features.loc[rows[1], "alignment"] if "alignment" in features.columns else 1
+        # face(0) vs heel(2) = classic matchup
+        is_face_heel = int((a1 == 0 and a2 == 2) or (a1 == 2 and a2 == 0))
+        features.loc[rows[0], "face_heel_matchup"] = is_face_heel
+        features.loc[rows[1], "face_heel_matchup"] = is_face_heel
+
+    features["face_heel_matchup"] = features.get(
+        "face_heel_matchup", pd.Series(0, index=df.index)
+    ).fillna(0)
+
     # Fill remaining NaN
     features = features.fillna(0)
 
@@ -312,16 +458,30 @@ def build_features(df: pd.DataFrame, title_df: pd.DataFrame) -> pd.DataFrame:
 
 
 FEATURE_COLUMNS = [
+    # Win momentum (5)
     "win_rate_30d", "win_rate_90d", "win_rate_365d",
     "current_win_streak", "current_loss_streak",
+    # Event context (4)
     "is_ppv", "is_title_match", "card_position", "event_tier",
+    # Match type (9)
     "match_type_win_rate",
     "is_singles", "is_tag_team", "is_triple_threat", "is_fatal_four_way",
     "is_ladder", "is_cage", "is_hell_in_a_cell", "is_royal_rumble",
+    # Title proximity (3)
     "is_champion", "num_defenses", "days_since_title_match",
+    # Career phase (3)
     "years_active", "matches_last_90d", "days_since_last_match",
+    # Promotion (1)
     "promotion_win_rate",
+    # Head-to-head (2)
     "h2h_win_rate", "h2h_matches",
+    # Alignment (6) — NEW
+    "alignment", "is_face", "is_heel",
+    "days_since_turn", "turns_12m", "face_heel_matchup",
+    # Match quality (1) — NEW
+    "avg_match_rating",
+    # Card position momentum (1) — NEW
+    "card_position_momentum",
 ]
 
 
@@ -342,7 +502,15 @@ def build_feature_matrix(
         title_df = load_title_data(conn)
         logger.info("title_data_loaded", records=len(title_df))
 
-        features = build_features(match_df, title_df)
+        logger.info("loading_alignment_data")
+        alignment_df = load_alignment_data(conn)
+        logger.info("alignment_data_loaded", records=len(alignment_df))
+
+        logger.info("loading_alignment_turns")
+        turns_df = load_alignment_turns(conn)
+        logger.info("turns_data_loaded", records=len(turns_df))
+
+        features = build_features(match_df, title_df, alignment_df, turns_df)
         return features
 
     finally:
