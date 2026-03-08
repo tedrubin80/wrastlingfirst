@@ -85,6 +85,41 @@ services:
     profiles:
       - etl
 
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: ringside-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://ringside:ringside@db:5432/ringside
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: http://localhost:3000
+      PORT: "3001"
+      NODE_ENV: development
+    volumes:
+      - ./api/src:/app/src:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ringside-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:3001
+    depends_on:
+      - api
+
 volumes:
   pgdata:
   redisdata:
