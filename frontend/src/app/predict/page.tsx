@@ -201,6 +201,33 @@ export default function PredictPage() {
               })}
           </div>
 
+          {/* Contributing Factors */}
+          {result.factors && result.factors.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">Key Factors</h3>
+              <div className="space-y-2">
+                {result.factors.map((f: any, i: number) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-zinc-900/50"
+                  >
+                    <span className="text-sm text-zinc-300">{f.label}</span>
+                    <span
+                      className={`text-xs font-mono px-2 py-1 rounded ${
+                        f.difference > 0
+                          ? "bg-emerald-500/10 text-emerald-400"
+                          : "bg-red-500/10 text-red-400"
+                      }`}
+                    >
+                      {f.difference > 0 ? "+" : ""}
+                      {f.difference.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p className="text-xs text-zinc-600 mt-4 text-center">
             Model: {result.model_version}
           </p>

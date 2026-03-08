@@ -97,6 +97,7 @@ services:
       DATABASE_URL: postgresql://ringside:ringside@db:5432/ringside
       REDIS_URL: redis://redis:6379
       FRONTEND_URL: http://localhost:3000
+      ML_SERVICE_URL: http://ml-service:8000
       PORT: "3001"
       NODE_ENV: development
     volumes:
@@ -106,6 +107,42 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  ml-service:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: ringside-ml
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://ringside:ringside@db:5432/ringside
+      REDIS_URL: redis://redis:6379
+      ML_PORT: "8000"
+    volumes:
+      - ./ml/models:/app/models
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ml-train:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: ringside-ml-train
+    command: python train.py
+    environment:
+      DATABASE_URL: postgresql://ringside:ringside@db:5432/ringside
+    volumes:
+      - ./ml/models:/app/models
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - train
 
   frontend:
     build:

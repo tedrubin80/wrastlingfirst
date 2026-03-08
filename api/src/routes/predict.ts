@@ -1,7 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import logger from '../utils/logger';
 
 const router = Router();
+
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
 const predictSchema = z.object({
   wrestler_ids: z.array(z.number().int()).min(2).max(8),
@@ -10,25 +13,47 @@ const predictSchema = z.object({
   title_match: z.boolean().optional(),
 });
 
-// POST /api/predict — ML prediction stub (Phase 3)
+// POST /api/predict — Proxy to ML prediction service
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const input = predictSchema.parse(req.body);
 
-    // Stub response until ML service is built in Phase 3
-    const n = input.wrestler_ids.length;
-    const probabilities = input.wrestler_ids.map((id, i) => ({
-      wrestler_id: id,
-      win_probability: Math.round((1 / n) * 100) / 100,
-      confidence: 0,
-    }));
+    // Try the ML service first
+    try {
+      const mlResponse = await fetch(`${ML_SERVICE_URL}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wrestler_ids: input.wrestler_ids,
+          match_type: input.match_type || 'singles',
+          event_tier: input.event_tier || 'weekly_tv',
+          title_match: input.title_match || false,
+        }),
+      });
 
+      if (mlResponse.ok) {
+        const data = await mlResponse.json();
+        res.json({ data });
+        return;
+      }
+
+      logger.warn({ status: mlResponse.status }, 'ML service returned error');
+    } catch (err) {
+      logger.warn('ML service unavailable, falling back to stub');
+    }
+
+    // Fallback: equal probabilities
+    const n = input.wrestler_ids.length;
     res.json({
       data: {
-        probabilities,
-        model_version: 'stub-v0',
+        probabilities: input.wrestler_ids.map((id) => ({
+          wrestler_id: id,
+          win_probability: Math.round((1 / n) * 100) / 100,
+          confidence: 0,
+        })),
         factors: [],
-        message: 'Prediction engine not yet trained — returning equal probabilities.',
+        model_version: 'fallback-stub',
+        message: 'ML service unavailable — returning equal probabilities.',
       },
     });
   } catch (err) {
