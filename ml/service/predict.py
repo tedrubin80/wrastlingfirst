@@ -263,6 +263,62 @@ class PredictionEngine:
                     h2h_matches = int(h2h_row[1] or 0)
                     h2h_win_rate = h2h_wins / h2h_matches if h2h_matches > 0 else 0.5
 
+                # Alignment features
+                cur.execute(
+                    """SELECT alignment FROM wrestler_alignments
+                     WHERE wrestler_id = %s
+                     ORDER BY effective_date DESC LIMIT 1""",
+                    (wrestler_id,)
+                )
+                align_row = cur.fetchone()
+                alignment_map = {"face": 0, "tweener": 1, "heel": 2}
+                alignment_val = alignment_map.get(align_row[0], 1) if align_row else 1
+                is_face = int(alignment_val == 0)
+                is_heel = int(alignment_val == 2)
+
+                cur.execute(
+                    """SELECT max(turn_date) FROM alignment_turns
+                     WHERE wrestler_id = %s""",
+                    (wrestler_id,)
+                )
+                last_turn = cur.fetchone()[0]
+                days_since_turn = (today - last_turn).days if last_turn else 999
+
+                cur.execute(
+                    """SELECT count(*) FROM alignment_turns
+                     WHERE wrestler_id = %s AND turn_date > %s""",
+                    (wrestler_id, today - timedelta(days=365))
+                )
+                turns_12m = int(cur.fetchone()[0] or 0)
+
+                # Face vs heel matchup (computed later in predict())
+                face_heel_matchup = 0
+
+                # Average match rating
+                cur.execute(
+                    """SELECT avg(m.rating) FROM match_participants mp
+                     JOIN matches m ON m.id = mp.match_id
+                     WHERE mp.wrestler_id = %s AND m.rating IS NOT NULL""",
+                    (wrestler_id,)
+                )
+                avg_rating_row = cur.fetchone()
+                avg_match_rating = float(avg_rating_row[0] or 0) if avg_rating_row[0] else 0.0
+
+                # Card position momentum (rolling 10-match average)
+                cur.execute(
+                    """SELECT m.match_order::float / NULLIF(
+                          (SELECT count(*) FROM matches m2 WHERE m2.event_id = m.event_id), 0
+                     )
+                     FROM match_participants mp
+                     JOIN matches m ON m.id = mp.match_id
+                     JOIN events e ON e.id = m.event_id
+                     WHERE mp.wrestler_id = %s AND e.date IS NOT NULL
+                     ORDER BY e.date DESC LIMIT 10""",
+                    (wrestler_id,)
+                )
+                positions = [float(r[0] or 0.5) for r in cur.fetchall()]
+                card_position_momentum = sum(positions) / len(positions) if positions else 0.5
+
                 # Event tier mapping
                 tier_map = {"ppv": 3, "special": 2, "weekly_tv": 1}
                 event_tier_num = tier_map.get(event_tier, 1)
@@ -297,6 +353,14 @@ class PredictionEngine:
             "promotion_win_rate": win_rate_365d,  # Approximate
             "h2h_win_rate": h2h_win_rate,
             "h2h_matches": h2h_matches,
+            "alignment": alignment_val,
+            "is_face": is_face,
+            "is_heel": is_heel,
+            "days_since_turn": days_since_turn,
+            "turns_12m": turns_12m,
+            "face_heel_matchup": face_heel_matchup,
+            "avg_match_rating": avg_match_rating,
+            "card_position_momentum": card_position_momentum,
         }
 
     def predict(
@@ -342,6 +406,14 @@ class PredictionEngine:
                 wid, match_type, event_tier, title_match, opponent_id
             )
             feature_rows.append(features)
+
+        # Compute face_heel_matchup for 2-person matches
+        if len(feature_rows) == 2:
+            a1 = feature_rows[0]["alignment"]
+            a2 = feature_rows[1]["alignment"]
+            is_fh = int((a1 == 0 and a2 == 2) or (a1 == 2 and a2 == 0))
+            feature_rows[0]["face_heel_matchup"] = is_fh
+            feature_rows[1]["face_heel_matchup"] = is_fh
 
         # Build feature matrix
         X = pd.DataFrame(feature_rows)[FEATURE_COLUMNS]
