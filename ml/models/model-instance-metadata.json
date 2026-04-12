@@ -1,0 +1,14 @@
+{
+  "ownerSlug": "theodorerubin",
+  "modelSlug": "ringside-analytics-match-winner",
+  "instanceSlug": "xgboost-v1",
+  "framework": "scikitLearn",
+  "overview": "XGBoost classifier + sklearn StandardScaler for logistic baseline. Trained 2026-03-08 on ~197K matches.",
+  "usage": "# Model Format\nscikit-learn / XGBoost joblib artifacts.\n\n# Files\n- `xgboost.joblib` \u2014 best model (primary predictor)\n- `logistic_regression.joblib` \u2014 baseline\n- `scaler.joblib` \u2014 StandardScaler fit on training features (apply before logistic_regression)\n- `training_report.json` \u2014 full metrics and feature importances\n\n# Usage\n```python\nimport joblib\nmodel = joblib.load('xgboost.joblib')\n# features: 35-dim vector \u2014 see MODEL_CARD for feature order\nproba = model.predict_proba(X)[:, 1]  # P(wrestler wins)\n```\n\n# Inputs\n35 numeric features per wrestler per match (recent form, H2H, match context, alignment, ratings, card momentum). See model description for full list.\n\n# Outputs\nProbability in [0, 1] that the focal wrestler wins the match.\n\n# Caveats\nTest-set AUC is 0.72 (val 0.95 \u2014 temporal overfitting). See description for full limitations. Not for wagering.\n",
+  "licenseName": "Apache 2.0",
+  "fineTunable": false,
+  "trainingData": [],
+  "modelInstanceType": "Unspecified",
+  "baseModelInstanceId": 0,
+  "externalBaseModelUrl": ""
+}

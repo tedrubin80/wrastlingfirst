@@ -12,6 +12,10 @@ push-kaggle:
 	@test -f ~/.kaggle/kaggle.json || { echo "Missing ~/.kaggle/kaggle.json"; exit 1; }
 	cd ml/notebooks && kaggle kernels push -p .
 
+push-kaggle-model:
+	@test -f ~/.kaggle/kaggle.json || { echo "Missing ~/.kaggle/kaggle.json"; exit 1; }
+	cd ml/models && kaggle models instances versions create theodorerubin/ringside-analytics-match-winner/scikitLearn/xgboost-v1 -p . -n "retrained $$(date +%Y-%m-%d)"
+
 pull-kaggle-status:
 	kaggle kernels status theodorerubin/ringside-analytics-ml
 
