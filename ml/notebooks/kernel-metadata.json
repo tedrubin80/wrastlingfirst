@@ -12,6 +12,6 @@
   "competition_sources": [],
   "kernel_sources": [],
   "model_sources": [
-    "theodorerubin/ringside-analytics-match-winner/scikitLearn/xgboost-v1/1"
+    "theodorerubin/ringside-analytics-match-winner/ScikitLearn/xgboost-v1/1"
   ]
 }
