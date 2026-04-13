@@ -8,6 +8,11 @@
   "enable_gpu": "false",
   "enable_tpu": "false",
   "enable_internet": "true",
+  "keywords": [
+    "sports",
+    "classification",
+    "xgboost"
+  ],
   "dataset_sources": [],
   "competition_sources": [],
   "kernel_sources": [],
