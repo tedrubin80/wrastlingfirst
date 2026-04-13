@@ -1,0 +1,16 @@
+[Unit]
+Description=Ringside Analytics — ML Prediction Service (FastAPI)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/wrastling/ml
+EnvironmentFile=/var/www/wrastling/.env
+ExecStart=/usr/bin/python3 -m uvicorn service.main:app --host 127.0.0.1 --port 8002
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/www/wrastling/logs/ml.log
+StandardError=append:/var/www/wrastling/logs/ml.log
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Ringside Analytics — Nightly data refresh
+After=network.target ringside-api.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/wrastling
+EnvironmentFile=/var/www/wrastling/.env
+ExecStart=/var/www/wrastling/scripts/nightly_refresh.sh
+StandardOutput=append:/var/www/wrastling/logs/refresh.log
+StandardError=append:/var/www/wrastling/logs/refresh.log

@@ -1,0 +1,17 @@
+[Unit]
+Description=Ringside Analytics — Express API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/wrastling/api
+EnvironmentFile=/var/www/wrastling/api/.env
+ExecStart=/home/grimdolfresearch/.nvm/versions/node/v22.22.1/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/www/wrastling/logs/api.log
+StandardError=append:/var/www/wrastling/logs/api.log
+
+[Install]
+WantedBy=default.target

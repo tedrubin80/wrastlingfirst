@@ -1,0 +1,10 @@
+[Unit]
+Description=Ringside Analytics — Nightly refresh timer (03:00 America/New_York)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 America/New_York
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

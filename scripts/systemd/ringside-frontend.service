@@ -1,0 +1,19 @@
+[Unit]
+Description=Ringside Analytics — Next.js Frontend
+After=network.target ringside-api.service
+Wants=ringside-api.service
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/wrastling/frontend
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=PATH=/home/grimdolfresearch/.nvm/versions/node/v22.22.1/bin:/usr/bin:/bin
+ExecStart=/home/grimdolfresearch/.nvm/versions/node/v22.22.1/bin/npm start
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/www/wrastling/logs/frontend.log
+StandardError=append:/var/www/wrastling/logs/frontend.log
+
+[Install]
+WantedBy=default.target
