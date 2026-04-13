@@ -21,8 +21,9 @@ log "=== Nightly refresh started ==="
 # 1. Scrape recent matches (last 7 days) for all active promotions
 log "Step 1: Scraping recent matches..."
 CURRENT_YEAR=$(date +%Y)
-python3 -m scraper --output-dir "$SCRAPE_DIR" --year "$CURRENT_YEAR" \
-  --promotions wwe aew 2>&1 | tee -a "$LOG_FILE" || {
+python3 -m scraper --output-dir "$SCRAPE_DIR" \
+  --year-start "$CURRENT_YEAR" --year-end "$CURRENT_YEAR" \
+  --promotions WWE AEW 2>&1 | tee -a "$LOG_FILE" || {
   log "WARNING: Scraper encountered errors (continuing with available data)"
 }
 

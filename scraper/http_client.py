@@ -23,7 +23,7 @@ class HttpClient:
     ):
         self.rate_limit = rate_limit
         self.max_retries = max_retries
-        self.cache_dir = cache_dir
+        self.cache_dir = Path(cache_dir) if cache_dir else None
         self._last_request_time: float = 0.0
 
         self.session = requests.Session()

@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+from pathlib import Path
 
 import structlog
 
@@ -50,12 +51,14 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default="./output",
+        type=Path,
+        default=Path("./output"),
         help="Directory for JSON output files",
     )
     parser.add_argument(
         "--cache-dir",
-        default="./cache",
+        type=Path,
+        default=Path("./cache"),
         help="Directory for cached HTML files",
     )
 
