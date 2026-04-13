@@ -52,7 +52,10 @@ class CagematchScraper:
         page = 0
         while True:
             url = self._event_list_url(promo_id, year, page)
-            html = self.client.get(url)
+            # Bypass cache for event-list pages: new events are added over time,
+            # so stale list pages would hide them. Detail pages (below) are
+            # safe to cache since they're immutable once published.
+            html = self.client.get(url, use_cache=False)
             event_stubs = parse_event_list_page(html)
 
             if not event_stubs:

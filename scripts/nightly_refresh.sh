@@ -41,16 +41,21 @@ python3 -m etl --stats-only 2>&1 | tee -a "$LOG_FILE" || {
   exit 1
 }
 
-# 4. Invalidate Redis cache
+# 4. Invalidate Redis cache (via python client — no system redis-cli needed)
 log "Step 4: Invalidating Redis cache..."
-if command -v redis-cli &>/dev/null; then
-  REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
-  redis-cli -u "$REDIS_URL" FLUSHDB 2>&1 | tee -a "$LOG_FILE" || {
-    log "WARNING: Cache invalidation failed (non-critical)"
-  }
-else
-  log "WARNING: redis-cli not available, skipping cache invalidation"
-fi
+REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
+python3 - <<PY 2>&1 | tee -a "$LOG_FILE" || log "WARNING: Cache invalidation failed (non-critical)"
+import sys
+try:
+    import redis
+    r = redis.from_url("$REDIS_URL", socket_connect_timeout=2)
+    r.ping()
+    r.flushdb()
+    print("redis cache flushed")
+except Exception as e:
+    print(f"redis unavailable (skipping): {e}", file=sys.stderr)
+    sys.exit(0)  # non-fatal
+PY
 
 # 5. Check if it's Sunday — retrain ML model weekly
 DOW=$(date +%u)
