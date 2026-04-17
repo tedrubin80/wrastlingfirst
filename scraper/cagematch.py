@@ -27,17 +27,28 @@ class CagematchScraper:
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
 
     def _event_list_url(self, promotion_id: int, year: int, page: int = 0) -> str:
-        """Build URL for a promotion's event list page."""
+        """Build URL for a promotion's event list page.
+
+        Cagematch distinguishes view=search (the form page) from view=results
+        (the actual event listing). The old URL used view=search, which returns
+        the empty form and no TableContents — causing the parser to return 0
+        events and the pagination loop to break immediately (or, when garbage
+        stubs got returned, loop forever).
+        """
         return (
-            f"{BASE_URL}/?id=1&view=search&sPromotion={promotion_id}"
+            f"{BASE_URL}/?id=1&view=results&sPromotion={promotion_id}"
             f"&sDateFromDay=01&sDateFromMonth=01&sDateFromYear={year}"
             f"&sDateTillDay=31&sDateTillMonth=12&sDateTillYear={year}"
             f"&s={page * 100}"
         )
 
     def _event_detail_url(self, cagematch_id: str) -> str:
-        """Build URL for an event detail page."""
-        return f"{BASE_URL}/?id=1&nr={cagematch_id}&page=2"
+        """Build URL for an event detail page.
+
+        page=1 is the full match-results view (contains "defeats" text).
+        page=2 is a lighter card preview that omits results. We want page=1.
+        """
+        return f"{BASE_URL}/?id=1&nr={cagematch_id}&page=1"
 
     def scrape_promotion_year(self, promotion: str, year: int) -> list[ParsedEvent]:
         """Scrape all events for a promotion in a given year."""
@@ -48,9 +59,14 @@ class CagematchScraper:
 
         logger.info("scraping_year", promotion=promotion, year=year)
         all_events: list[ParsedEvent] = []
+        seen_ids: set[str] = set()
 
+        # Cagematch's s= offset doesn't return empty when over-paginated — it
+        # echoes back stale stubs, causing infinite loops. Guard with a
+        # dedup-on-id check AND a hard page cap (real promo-years top out ~30).
+        MAX_PAGES = 200
         page = 0
-        while True:
+        while page < MAX_PAGES:
             url = self._event_list_url(promo_id, year, page)
             # Bypass cache for event-list pages: new events are added over time,
             # so stale list pages would hide them. Detail pages (below) are
@@ -61,18 +77,31 @@ class CagematchScraper:
             if not event_stubs:
                 break
 
+            new_stubs = [
+                s for s in event_stubs
+                if s.get("cagematch_id") and s["cagematch_id"] not in seen_ids
+            ]
+            if not new_stubs:
+                logger.info(
+                    "event_list_exhausted",
+                    promotion=promotion,
+                    year=year,
+                    page=page,
+                    reason="no_new_ids",
+                )
+                break
+
             logger.info(
                 "event_list_page",
                 promotion=promotion,
                 year=year,
                 page=page,
                 events_found=len(event_stubs),
+                new_events=len(new_stubs),
             )
 
-            for stub in event_stubs:
-                if not stub.get("cagematch_id"):
-                    continue
-
+            for stub in new_stubs:
+                seen_ids.add(stub["cagematch_id"])
                 try:
                     detail_url = self._event_detail_url(stub["cagematch_id"])
                     detail_html = self.client.get(detail_url)
@@ -80,9 +109,11 @@ class CagematchScraper:
                     event.promotion = promotion
 
                     all_events.append(event)
+                    # Note: structlog reserves `event` as the positional
+                    # message arg, so we must use `event_name` as the kwarg.
                     logger.info(
                         "event_scraped",
-                        event=event.name,
+                        event_name=event.name,
                         date=str(event.date),
                         matches=len(event.matches),
                     )
@@ -94,6 +125,14 @@ class CagematchScraper:
                     )
 
             page += 1
+
+        if page >= MAX_PAGES:
+            logger.warning(
+                "event_list_page_cap_hit",
+                promotion=promotion,
+                year=year,
+                max_pages=MAX_PAGES,
+            )
 
         return all_events
 

@@ -146,12 +146,20 @@ def parse_event_list_page(html: str) -> list[dict]:
         if len(cells) < 2:
             continue
 
-        link = cells[1].find("a") if len(cells) > 1 else None
-        if not link:
+        # cell[1] contains TWO links: a promotion link (?id=8&nr=PROMO)
+        # followed by the actual event link (?id=1&nr=EVENT). Skip the
+        # promotion link and grab the event link specifically.
+        event_link = None
+        for a in cells[1].find_all("a"):
+            href = a.get("href", "")
+            if re.search(r"[?&]id=1(&|$)", href) and "nr=" in href:
+                event_link = a
+                break
+        if not event_link:
             continue
 
-        href = link.get("href", "")
-        event_name = link.get_text(strip=True)
+        href = event_link.get("href", "")
+        event_name = event_link.get_text(strip=True)
 
         date_text = cells[0].get_text(strip=True) if cells else ""
         event_date = None
@@ -235,67 +243,73 @@ def parse_event_page(html: str, event_stub: dict | None = None) -> ParsedEvent:
         cagematch_id=event_stub.get("cagematch_id") if event_stub else None,
     )
 
-    # Parse match card
-    match_card = soup.find("div", class_="Matchcard")
-    if not match_card:
-        # Try alternative selectors
-        match_card = soup.find("div", class_="MatchCard")
+    # Parse match card. Cagematch now wraps the card in <div class="Matches">
+    # with each match as <div class="Match">. Older selectors "Matchcard" /
+    # "MatchCard" are retained as fallbacks in case we re-scrape old cached HTML.
+    match_container = soup.find("div", class_="Matches")
+    if match_container:
+        match_divs = match_container.find_all("div", class_="Match", recursive=False)
+    else:
+        legacy = soup.find("div", class_="Matchcard") or soup.find("div", class_="MatchCard")
+        match_divs = legacy.find_all("div", recursive=False) if legacy else []
 
-    if match_card:
-        match_divs = match_card.find_all("div", class_="MatchCard")
-        if not match_divs:
-            match_divs = match_card.find_all("div", recursive=False)
-
-        for i, match_div in enumerate(match_divs, 1):
-            parsed_match = _parse_match_div(match_div, i)
-            if parsed_match and parsed_match.participants:
-                event.matches.append(parsed_match)
+    for i, match_div in enumerate(match_divs, 1):
+        parsed_match = _parse_match_div(match_div, i)
+        if parsed_match and parsed_match.participants:
+            event.matches.append(parsed_match)
 
     return event
 
 
 def _parse_match_div(div: Tag, order: int) -> ParsedMatch | None:
-    """Parse a single match div from the match card."""
+    """Parse a single match div from the match card.
+
+    Current Cagematch structure:
+        <div class="Match">
+          <div class="MatchType">Tag Team Match</div>
+          <div class="MatchResults">A & B defeat C & D</div>
+        </div>
+    """
     text = div.get_text(" ", strip=True)
     if not text or len(text) < 5:
         return None
 
-    # Detect match type
+    # Match type lives in its own div
     match_type_text = ""
-    type_span = div.find("span", class_="MatchType")
-    if type_span:
-        match_type_text = type_span.get_text(strip=True)
+    type_el = div.find(class_="MatchType")
+    if type_el:
+        match_type_text = type_el.get_text(strip=True)
     match_type = classify_match_type(match_type_text or text)
 
-    # Detect title match
+    # Results text is the part we actually need for participant result detection
+    results_el = div.find(class_="MatchResults")
+    results_text = results_el.get_text(" ", strip=True) if results_el else text
+
+    # Detect title match — can appear in type or results
     title_match = bool(re.search(
-        r"(championship|title)", text, re.IGNORECASE
+        r"(championship|title)", match_type_text + " " + results_text, re.IGNORECASE
     ))
 
-    # Duration
+    # Duration — Cagematch currently omits this on most cards; keep the regex
+    # as a best-effort salvage for cases where they do include it.
     duration = None
-    dur_match = re.search(r"(\d+:\d+)", text)
+    dur_match = re.search(r"\b(\d+:\d+)\b", results_text)
     if dur_match:
         duration = parse_duration(dur_match.group(1))
 
-    # Rating
+    # Rating — not surfaced on event-card pages anymore; leave None.
     rating = None
-    rating_span = div.find("span", class_="star-rating")
-    if rating_span:
-        star_text = rating_span.get_text(strip=True)
-        try:
-            rating = float(star_text)
-        except ValueError:
-            pass
 
-    # Stipulation
+    # Stipulation — embedded in match_type_text for many cards; we classify
+    # the primary type separately, so store the raw type string as stipulation
+    # only when it carries extra info beyond a basic "Singles Match".
     stipulation = None
-    stip_span = div.find("span", class_="MatchStipulation")
-    if stip_span:
-        stipulation = stip_span.get_text(strip=True)
+    if match_type_text and match_type == "other":
+        stipulation = match_type_text
 
-    # Parse participants — look for wrestler links and result indicators
-    participants = _parse_participants(div, text)
+    # Participants + results come from the MatchResults div specifically
+    parse_source = results_el if results_el else div
+    participants = _parse_participants(parse_source, results_text)
 
     return ParsedMatch(
         match_order=order,
@@ -309,22 +323,45 @@ def _parse_match_div(div: Tag, order: int) -> ParsedMatch | None:
 
 
 def _parse_participants(div: Tag, full_text: str) -> list[ParsedParticipant]:
-    """Extract match participants and their results from a match div."""
+    """Extract match participants and their results from a MatchResults div.
+
+    Individual wrestler links on Cagematch today look like
+    ``?id=2&nr=<worker_id>&name=<display>``. Tag-team aggregate links
+    (``?id=28`` / ``?id=29``) are skipped — we want the constituent wrestlers,
+    not the team name.
+    """
     participants = []
 
-    # Find wrestler links
-    wrestler_links = div.find_all("a", href=re.compile(r"worker"))
+    wrestler_links = div.find_all(
+        "a", href=re.compile(r"[?&]id=2(&|$)")
+    )
     if not wrestler_links:
         return participants
 
-    # Determine winner — typically text contains "defeat" or "over"
-    # Common patterns: "A defeat B", "A & B defeat C & D", "A draw B"
-    is_draw = bool(re.search(r"\b(draw|time.?limit|no.?contest|double)\b", full_text, re.IGNORECASE))
+    # Dedup on href — the same wrestler can appear twice (e.g. manager + team
+    # member). Keep first occurrence since we use position to attribute result.
+    seen: set[str] = set()
+    deduped = []
+    for link in wrestler_links:
+        href = link.get("href", "")
+        if href in seen:
+            continue
+        seen.add(href)
+        deduped.append(link)
+    wrestler_links = deduped
+
+    # Result classification. Cagematch uses "defeats" (singular subject) and
+    # "defeat" (plural). Both anchor the winner/loser split.
     is_no_contest = bool(re.search(r"\bno.?contest\b", full_text, re.IGNORECASE))
+    is_draw = (
+        not is_no_contest
+        and bool(re.search(r"\b(draw|time.?limit|double)\b", full_text, re.IGNORECASE))
+    )
     is_dq = bool(re.search(r"\b(disqualif|DQ)\b", full_text, re.IGNORECASE))
     is_countout = bool(re.search(r"\bcountout\b", full_text, re.IGNORECASE))
 
-    defeat_match = re.search(r"\bdefeat", full_text, re.IGNORECASE)
+    defeat_match = re.search(r"\bdefeats?\b", full_text, re.IGNORECASE)
+    has_defeat = defeat_match is not None
     defeat_pos = defeat_match.start() if defeat_match else len(full_text)
 
     for link in wrestler_links:
@@ -332,13 +369,18 @@ def _parse_participants(div: Tag, full_text: str) -> list[ParsedParticipant]:
         if not name:
             continue
 
-        # Determine result based on position relative to "defeat"
         link_pos = full_text.find(name)
+        if link_pos < 0:
+            link_pos = defeat_pos  # fallback: treat as loss side
 
         if is_no_contest:
             result = "no_contest"
         elif is_draw:
             result = "draw"
+        elif not has_defeat:
+            # Preview card (scheduled match, no result yet) — mark unknown so
+            # ETL can filter these out without treating them as real losses.
+            result = "unknown"
         elif is_dq:
             result = "dq" if link_pos > defeat_pos else "win"
         elif is_countout:
