@@ -26,6 +26,9 @@ Thumbs.db
 unresolved_wrestlers.txt
 *.log
 
+# Dataset exports (published to Kaggle + Hugging Face, not GitHub)
+data/
+
 # Kaggle notebook bundle (copies of ml/models/ artifacts,
 # needed on disk for `kaggle kernels push` but not in git)
 ml/notebooks/xgboost.joblib
