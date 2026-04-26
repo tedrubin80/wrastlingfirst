@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+title: "Ringside Analytics: Pro Wrestling Match Archive (1980–present)"
+message: "If you use this dataset, please cite it as below."
+type: dataset
+authors:
+  - family-names: Rubin
+    given-names: Theodore
+    email: ted@theorubin.com
+abstract: >-
+  A relational snapshot of professional wrestling history from 1980 to the
+  present: 482K matches, 731K wrestler-match participations, 35K events, and
+  12.8K wrestlers across WWE, AEW, WCW, ECW, NXT, and TNA. Provided as nine
+  joinable parquet/CSV tables, a denormalized match_view, and a 35-feature
+  ML-ready feature_matrix. Sourced from public Cagematch.net scrapes and the
+  alexdiresta profightdb dump, normalized into a Postgres schema.
+keywords:
+  - pro wrestling
+  - sports
+  - tabular
+  - classification
+  - relational data
+license: CC0-1.0
+date-released: 2026-04-19
+version: "1.1.0"
+url: "https://www.kaggle.com/datasets/theodorerubin/ringside-wrestling-archive"
+repository-code: "https://github.com/tedrubin80/wrastlingfirst"
+identifiers:
+  - type: url
+    value: "https://huggingface.co/datasets/datamatters24/ringside-analytics"
+    description: Hugging Face mirror
+preferred-citation:
+  type: dataset
+  authors:
+    - family-names: Rubin
+      given-names: Theodore
+  title: "Ringside Analytics: Pro Wrestling Match Archive (1980–present)"
+  year: 2026
+  url: "https://www.kaggle.com/datasets/theodorerubin/ringside-wrestling-archive"

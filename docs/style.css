@@ -1,0 +1,325 @@
+/* Ringside Analytics — portfolio site styles
+ * Dark theme, data-forward. One file styles index.html + paper.html.
+ */
+
+:root {
+  --bg:        #0f1115;
+  --bg-card:   #161922;
+  --bg-code:   #1c2029;
+  --text:      #e6e8ee;
+  --text-dim:  #9ba0ad;
+  --accent:    #c9352d;        /* the wrestling-red from the figures */
+  --accent-bg: rgba(201, 53, 45, 0.10);
+  --border:    #2a2f3c;
+  --link:      #ff6b6b;
+  --link-hov:  #ff8a8a;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 0;
+  padding: 0;
+}
+
+/* Layout */
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+.container-wide {
+  max-width: 1100px;
+}
+
+/* Hero / landing page */
+.hero {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.hero h1 {
+  font-size: 2.6rem;
+  line-height: 1.15;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.hero .subtitle {
+  font-size: 1.2rem;
+  color: var(--text-dim);
+  margin: 0 0 1.5rem;
+}
+
+.hero .meta {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+/* Section + card grid */
+.section {
+  margin-bottom: 3rem;
+}
+
+.section h2 {
+  font-size: 1.5rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.card p {
+  margin: 0 0 0.75rem;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+}
+
+.card a {
+  color: var(--link);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.card a:hover { color: var(--link-hov); }
+
+.card .badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Stats banner */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat .num {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  display: block;
+}
+
+.stat .label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Generic typography */
+h1, h2, h3, h4 {
+  color: var(--text);
+  font-weight: 600;
+}
+
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 1rem; }
+h2 { font-size: 1.6rem; margin: 2.5rem 0 1rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.2rem; margin: 1.8rem 0 0.6rem; }
+h4 { font-size: 1.05rem; margin: 1.4rem 0 0.5rem; color: var(--text-dim); }
+
+p { margin: 0 0 1rem; }
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+a:hover {
+  color: var(--link-hov);
+  border-bottom-color: var(--link-hov);
+}
+
+/* Code */
+code {
+  font-family: "JetBrains Mono", "SF Mono", Consolas, Monaco, monospace;
+  background: var(--bg-code);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: #ffd0cd;
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  line-height: 1.5;
+  font-size: 0.85rem;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--text);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.92rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: var(--bg-card);
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.78rem;
+}
+
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* Blockquote */
+blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1.5rem 0;
+  display: block;
+  background: white;            /* matplotlib figs have transparent bg; white pad reads better in dark theme */
+  padding: 0.5rem;
+}
+
+figure {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+figcaption {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* TOC styling (pandoc default class) */
+nav#TOC {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0 2.5rem;
+  font-size: 0.92rem;
+}
+
+nav#TOC ul { padding-left: 1.2rem; margin: 0.4rem 0; }
+nav#TOC > ul { padding-left: 1rem; }
+nav#TOC li { margin: 0.25rem 0; }
+nav#TOC > ul > li > a { font-weight: 600; }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+/* Buttons / CTA */
+.cta {
+  display: inline-block;
+  background: var(--accent);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  margin: 0.5rem 0.5rem 0.5rem 0;
+  border: none;
+}
+
+.cta:hover {
+  background: #d44a42;
+  color: white;
+  border-bottom-color: transparent;
+}
+
+.cta.ghost {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.cta.ghost:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-bottom-color: transparent;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container { padding: 2rem 1rem 3rem; }
+  .hero h1 { font-size: 2rem; }
+  .stats { gap: 1.2rem; padding: 1rem; }
+  .stat .num { font-size: 1.4rem; }
+}

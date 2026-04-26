@@ -1,0 +1,24 @@
+{
+  "id": "theodorerubin/ringside-wrestling-archive-starter",
+  "title": "Getting Started with the Ringside Wrestling Archive",
+  "code_file": "starter.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "false",
+  "enable_gpu": "false",
+  "enable_tpu": "false",
+  "enable_internet": "false",
+  "keywords": [
+    "sports",
+    "tabular",
+    "data analytics",
+    "beginner",
+    "tutorial"
+  ],
+  "dataset_sources": [
+    "theodorerubin/ringside-wrestling-archive"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
