@@ -38,6 +38,9 @@ ml/notebooks/scaler.joblib
 ml/notebooks/logistic_regression.joblib
 ml/notebooks/training_report.json
 
+# MLflow local tracking DB (regenerable)
+ml/mlflow.db
+
 # Docker
 .docker/
 
