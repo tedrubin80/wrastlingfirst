@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ringside Analytics — Pro Wrestling ML on 482K Matches</title>
+  <meta name="description" content="A relational pro-wrestling dataset and ML system: 482K matches, 35 features, XGBoost on scripted outcomes. Dataset, model, code, paper.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container container-wide">
+
+  <header class="hero">
+    <h1>Ringside Analytics</h1>
+    <p class="subtitle">An ML system for predicting pro wrestling match outcomes — and a case study in label noise from scripted data.</p>
+    <p class="meta">Theodore Rubin · 2026 · CC0 (data) / Apache 2.0 (code &amp; model)</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="num">482K</span><span class="label">Matches</span></div>
+    <div class="stat"><span class="num">731K</span><span class="label">Wrestler-Participations</span></div>
+    <div class="stat"><span class="num">12.8K</span><span class="label">Wrestlers</span></div>
+    <div class="stat"><span class="num">35K</span><span class="label">Events</span></div>
+    <div class="stat"><span class="num">1980&nbsp;→&nbsp;Now</span><span class="label">Coverage</span></div>
+    <div class="stat"><span class="num">0.718</span><span class="label">Test AUC</span></div>
+  </div>
+
+  <section class="section">
+    <p>40+ years of pro wrestling data, normalized into a relational schema and released under <strong>CC0</strong>. Ships as parquet/CSV tables, a denormalized <code>match_view</code>, and a 35-feature <code>feature_matrix</code> that reproduces the trained model exactly. The companion paper documents the <em>kayfabe problem</em> — predicting outcomes that are decided by a writers' room rather than measured by athletic competition — and reports an honest 25-point validation→test AUC gap that turns out to be a structural property of the data, not a methodological error.</p>
+    <p>
+      <a class="cta" href="paper.html">Read the paper →</a>
+      <a class="cta ghost" href="paper.pdf">Download PDF</a>
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>Public artifacts</h2>
+    <div class="cards">
+
+      <div class="card">
+        <span class="badge">Dataset</span>
+        <h3>Kaggle</h3>
+        <p>Ringside Wrestling Archive — 9 relational tables, denormalized match_view, 35-feature matrix. CC0.</p>
+        <a href="https://www.kaggle.com/datasets/theodorerubin/ringside-wrestling-archive">View on Kaggle →</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Dataset Mirror</span>
+        <h3>Hugging Face</h3>
+        <p>Same data, mirrored on HF Hub for the ML community. Auto-discovered as parquet by datasets/pandas/polars.</p>
+        <a href="https://huggingface.co/datasets/datamatters24/ringside-analytics">View on HF →</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Model</span>
+        <h3>XGBoost — Match Winner</h3>
+        <p>Trained predictor with full model card, honest test-set metrics, and feature-importance breakdown.</p>
+        <a href="https://www.kaggle.com/models/theodorerubin/ringside-analytics-match-winner">View on Kaggle →</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Notebook</span>
+        <h3>Starter — Kayfabe-Aware EDA</h3>
+        <p>20-cell tour: schema, coverage, the kayfabe twist, a leaky baseline, and the validation/test gap tease.</p>
+        <a href="https://www.kaggle.com/code/theodorerubin/ringside-wrestling-archive-starter">View on Kaggle →</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Code</span>
+        <h3>Source Repo</h3>
+        <p>ETL, scraper, training pipeline, FastAPI service, Next.js front-end, this site. TypeScript + Python.</p>
+        <a href="https://github.com/tedrubin80/wrastlingfirst">View on GitHub →</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Live Demo</span>
+        <h3>HF Space — Predictor</h3>
+        <p>Interactive Gradio demo: pick two wrestlers, set match context, get win probability with feature attribution.</p>
+        <a href="https://huggingface.co/spaces/datamatters24/ringside-predictor">Open Space →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Why this dataset is unusual</h2>
+    <p>Pro wrestling outcomes are <strong>scripted</strong>. The <code>result</code> column doesn't record who's the better athlete — it records who got booked to win. That sounds like a flaw. It's actually the most interesting property of the dataset.</p>
+    <p>If outcomes were random athletic results, every wrestler's career win rate would cluster near 0.5. The empirical distribution looks nothing like that:</p>
+    <figure>
+      <img src="figures/win_rate_distribution.png" alt="Career win-rate distribution shows heavy tails — jobbers booked to lose, stars booked to win">
+      <figcaption>Career win-rate distribution for wrestlers with ≥50 matches. The bimodal shape is the kayfabe signature: writers split the roster into &ldquo;wins&rdquo; and &ldquo;loses,&rdquo; not chance.</figcaption>
+    </figure>
+    <p>This shapes everything downstream: feature engineering (streak features dominate), validation strategy (random k-fold leaks signal across storyline arcs), and interpretation (the model is a booking-pattern detector, not a skill estimator). The <a href="paper.html">paper</a> walks through it in full.</p>
+  </section>
+
+  <section class="section">
+    <h2>What you can do with it</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>📊 Train your own model</h3>
+        <p>Use <code>feature_matrix.parquet</code> for instant 35-feature, ML-ready training. Or roll your own from the source tables — the schema is documented column-by-column.</p>
+      </div>
+      <div class="card">
+        <h3>📈 Explore booking history</h3>
+        <p>Title lineages, head-to-head records, alignment-turn timelines. Try <code>examples/duckdb_queries.sql</code> to get started in under a minute.</p>
+      </div>
+      <div class="card">
+        <h3>📝 Write about label noise</h3>
+        <p>This dataset is a teaching case for ML validation under temporal autocorrelation. The val/test gap story sells itself. CC0, so use it freely.</p>
+      </div>
+      <div class="card">
+        <h3>🎤 Try storyline NLP</h3>
+        <p>The numeric features can't see narrative. A separate NLP-only release with cleaned match descriptions is in preparation. Watch the GitHub repo.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built by Theodore Rubin · <a href="https://github.com/tedrubin80/wrastlingfirst">github.com/tedrubin80/wrastlingfirst</a></p>
+    <p>Data: CC0 1.0 · Code &amp; Model: Apache 2.0 · No betting.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

@@ -9,7 +9,9 @@ env/
 # Scraper cache and output
 cache/
 output/
-*.html
+# Block scraper-cache HTML, but allow rendered portfolio docs (docs/*.html)
+/cache/*.html
+/output/*.html
 
 # Environment
 .env

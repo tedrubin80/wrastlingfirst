@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Theodore Rubin" />
+  <meta name="keywords" content="machine learning, sports
+analytics, label noise, temporal validation, XGBoost" />
+  <title>Predicting Scripted Outcomes — Ringside Analytics</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Predicting Scripted Outcomes — Ringside Analytics</h1>
+<p class="author">Theodore Rubin</p>
+<p class="date">April 2026</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>We describe Ringside Analytics, an end-to-end machine-learning system
+trained on 40+ years of professional wrestling data — 482,166 matches
+and 731,133 wrestler-match participations spanning WWE, AEW, WCW, ECW,
+NXT, and TNA. Pro wrestling outcomes are scripted, which makes the
+prediction target an artifact of human creative decisions rather than
+athletic measurement. We discuss how this <em>kayfabe problem</em>
+shapes feature engineering, evaluation, and interpretation; report
+honest test-set performance for both XGBoost (AUC 0.718) and a
+logistic-regression baseline (AUC 0.698); and document a 25-point
+validation→test AUC gap that reveals temporal autocorrelation in
+storyline arcs. The dataset, trained model, and source code are released
+under permissive licenses.</p>
+</div>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#introduction" id="toc-introduction">1.
+Introduction</a></li>
+<li><a href="#data" id="toc-data">2. Data</a>
+<ul>
+<li><a href="#sources" id="toc-sources">2.1 Sources</a></li>
+<li><a href="#schema" id="toc-schema">2.2 Schema</a></li>
+<li><a href="#distribution-and-license"
+id="toc-distribution-and-license">2.3 Distribution and license</a></li>
+</ul></li>
+<li><a href="#the-kayfabe-problem" id="toc-the-kayfabe-problem">3. The
+Kayfabe Problem</a>
+<ul>
+<li><a href="#what-kayfabe-means-in-data-terms"
+id="toc-what-kayfabe-means-in-data-terms">3.1 What “kayfabe” means in
+data terms</a></li>
+<li><a href="#implications-for-ml-practice"
+id="toc-implications-for-ml-practice">3.2 Implications for ML
+practice</a></li>
+</ul></li>
+<li><a href="#methods" id="toc-methods">4. Methods</a>
+<ul>
+<li><a href="#feature-engineering" id="toc-feature-engineering">4.1
+Feature engineering</a></li>
+<li><a href="#splits" id="toc-splits">4.2 Splits</a></li>
+<li><a href="#models" id="toc-models">4.3 Models</a></li>
+</ul></li>
+<li><a href="#results" id="toc-results">5. Results</a>
+<ul>
+<li><a href="#headline-metrics" id="toc-headline-metrics">5.1 Headline
+metrics</a></li>
+<li><a href="#the-validationtest-gap"
+id="toc-the-validationtest-gap">5.2 The validation→test gap</a></li>
+<li><a href="#feature-importance" id="toc-feature-importance">5.3
+Feature importance</a></li>
+</ul></li>
+<li><a href="#discussion" id="toc-discussion">6. Discussion</a>
+<ul>
+<li><a href="#what-the-model-is-actually-learning"
+id="toc-what-the-model-is-actually-learning">6.1 What the model is
+actually learning</a></li>
+<li><a href="#what-the-model-cannot-learn"
+id="toc-what-the-model-cannot-learn">6.2 What the model cannot
+learn</a></li>
+<li><a href="#ablation-what-happens-if-we-remove-streak-features"
+id="toc-ablation-what-happens-if-we-remove-streak-features">6.3
+Ablation: what happens if we remove streak features?</a></li>
+</ul></li>
+<li><a href="#limitations-and-future-work"
+id="toc-limitations-and-future-work">7. Limitations and Future Work</a>
+<ul>
+<li><a href="#limitations" id="toc-limitations">7.1 Limitations</a></li>
+<li><a href="#future-work" id="toc-future-work">7.2 Future work</a></li>
+</ul></li>
+<li><a href="#conclusion" id="toc-conclusion">8. Conclusion</a></li>
+<li><a href="#references-and-resources"
+id="toc-references-and-resources">References and Resources</a></li>
+</ul>
+</nav>
+<h1 id="introduction">1. Introduction</h1>
+<p>Most public ML datasets pair with one of two label types: a measured
+physical quantity (housing prices, image content, sensor readings) or a
+behavioral response (clicks, ratings, churn). Pro wrestling occupies a
+stranger niche. Match outcomes — who wins — are decided in advance by
+booking writers and executed by performers. The label is neither
+measurement nor response; it is creative output.</p>
+<p>This paper documents the design and evaluation of a model trained
+against that label. We work with 482K matches collected from public
+sources (Cagematch.net, the alexdiresta profightdb dump) and normalized
+into a relational schema with 9 tables. We engineer 35 features across
+seven families — recent form, head-to-head, match context, status,
+alignment, ratings, and card momentum — train both XGBoost and a
+logistic-regression baseline, and evaluate on a temporal hold-out.</p>
+<p>The honest result: AUC 0.718 on the test set, with a 25-point gap
+from the validation set. We argue this gap is structural rather than
+incidental — it reflects how the <em>kayfabe problem</em> propagates
+through booking-arc autocorrelation. This finding is more useful than
+the model itself, and we treat the writeup as the primary artifact.</p>
+<p>The full system, trained model, dataset, and source code are
+public:</p>
+<ul>
+<li><strong>Dataset (Kaggle):</strong>
+<code>theodorerubin/ringside-wrestling-archive</code> — CC0</li>
+<li><strong>Dataset (HF mirror):</strong>
+<code>datamatters24/ringside-analytics</code></li>
+<li><strong>Trained model:</strong>
+<code>theodorerubin/ringside-analytics-match-winner</code> — Apache
+2.0</li>
+<li><strong>Source repo:</strong>
+<code>github.com/tedrubin80/wrastlingfirst</code></li>
+</ul>
+<h1 id="data">2. Data</h1>
+<h2 id="sources">2.1 Sources</h2>
+<p>Two public sources combine to form the canonical dataset:</p>
+<ol type="1">
+<li><strong>Cagematch.net</strong> — a community-maintained
+pro-wrestling encyclopedia with detailed match cards, dating from
+approximately 1985 onwards. Coverage is densest for WWE, WCW, and AEW;
+sparser for territory-era and indie events.</li>
+<li><strong>alexdiresta/all-wwe-and-wwf-matches</strong> — a Kaggle
+mirror of the profightdb SQLite dump, used for cross-validation of
+Cagematch entries and for filling in pre-1990 WWF results.</li>
+</ol>
+<p>A bespoke Python scraper (rate-limited, cached) ingests Cagematch
+HTML pages; an ETL pipeline normalizes match cards, resolves wrestler
+aliases (Dwayne Johnson → Rocky Maivia → The Rock), classifies match
+types into a fixed enum, and deduplicates against natural keys (date +
+venue + canonical participant tuple).</p>
+<h2 id="schema">2.2 Schema</h2>
+<p>The published schema is nine relational tables:</p>
+<pre><code>promotions ─┬─&lt; wrestlers, events, titles, wrestler_aliases
+            
+wrestlers ──┬─&lt; match_participants (the fact table)
+            ├─&lt; wrestler_aliases
+            ├─&lt; title_reigns
+            └─&lt; alignment_turns
+
+events ─────┬─&lt; matches
+            └─&lt; alignment_turns (event-pinned turns)
+
+matches ────── match_participants
+
+titles ─────── title_reigns</code></pre>
+<p><code>match_participants</code> is the analytical fact table: one row
+per (match, wrestler), keyed to dimensions for event date, promotion,
+opponents, and storyline state. It carries the <code>result</code>
+column — the prediction target — with values <code>win</code>,
+<code>loss</code>, <code>draw</code>, <code>dq</code>,
+<code>no_contest</code>, or <code>countout</code>.</p>
+<p>Coverage statistics:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th style="text-align: right;">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Matches</td>
+<td style="text-align: right;">482,166</td>
+</tr>
+<tr class="even">
+<td>Wrestler-match participations</td>
+<td style="text-align: right;">731,133</td>
+</tr>
+<tr class="odd">
+<td>Events</td>
+<td style="text-align: right;">35,064</td>
+</tr>
+<tr class="even">
+<td>Wrestlers</td>
+<td style="text-align: right;">12,814</td>
+</tr>
+<tr class="odd">
+<td>Promotions</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr class="even">
+<td>Years covered</td>
+<td style="text-align: right;">1980–present</td>
+</tr>
+</tbody>
+</table>
+<h2 id="distribution-and-license">2.3 Distribution and license</h2>
+<p>The canonical dataset is published as nine parquet files (snappy
+compression) plus CSV mirrors. License is <strong>CC0 1.0</strong> —
+public domain dedication. Sourced facts (dates, names, results) are not
+copyrightable; the parquets are derivative works of public material that
+we are free to release under any license. The underlying Cagematch HTML
+and profightdb dump retain their own terms; we do not redistribute the
+source HTML.</p>
+<h1 id="the-kayfabe-problem">3. The Kayfabe Problem</h1>
+<h2 id="what-kayfabe-means-in-data-terms">3.1 What “kayfabe” means in
+data terms</h2>
+<p><em>Kayfabe</em> — wrestling jargon for the convention of presenting
+scripted events as real — has a precise data-modeling translation:
+<strong>the prediction target is generated by a writers’ room rather
+than by athletic competition.</strong> This shifts the model’s job from
+prediction to pattern-detection-of-decisions.</p>
+<p>Concretely:</p>
+<ul>
+<li>A model can never learn “athletic ability” from this data, because
+nothing measures it.</li>
+<li>A model <em>can</em> learn “booking patterns” — which wrestlers are
+pushed, which are jobbers, which feuds end at PPV.</li>
+<li>The label is <strong>autocorrelated with itself</strong>: a wrestler
+on a five-match winning streak is usually being booked toward a payoff.
+Their next-match outcome is not independent of the previous five.</li>
+</ul>
+<p>If outcomes were random athletic results, every active wrestler’s
+career win rate would cluster near 0.5 with normal-distribution
+variance. The empirical distribution looks nothing like that.</p>
+<figure>
+<img src="figures/win_rate_distribution.png"
+alt="Career win-rate distribution for wrestlers with ≥50 matches" />
+<figcaption aria-hidden="true">Career win-rate distribution for
+wrestlers with ≥50 matches</figcaption>
+</figure>
+<p>The bimodal-with-fat-tails shape is the <em>kayfabe signature</em>: a
+heavy left lobe (jobbers booked to lose), a heavy right lobe (stars
+booked to win), and a thin middle. ~18% of qualifying wrestlers have a
+career win rate above 0.7; ~14% are below 0.3. Coin-flip would predict
+~5% in each tail.</p>
+<h2 id="implications-for-ml-practice">3.2 Implications for ML
+practice</h2>
+<p>Three follow on directly:</p>
+<p><strong>(1) The dominant features will be momentum-based.</strong>
+Streaks are the highest-signal feature family because booking is
+path-dependent: writers escalate a push until a planned cool-down, then
+reset. We confirm this empirically in Section 6:
+<code>current_win_streak</code> carries 31% of XGBoost feature
+importance, with <code>current_loss_streak</code> and
+<code>days_since_last_match</code> next.</p>
+<p><strong>(2) Random k-fold splits leak information.</strong>
+Storylines persist across temporal boundaries — Roman Reigns being
+champion in March is highly informative about Roman Reigns being
+champion in April. A random shuffle places adjacent matches on opposite
+sides of the train/test boundary, leaking the storyline state. We will
+see in Section 6 that this produces an unrealistic 0.95 validation AUC
+for the same model that scores 0.72 on a true future hold-out.</p>
+<p><strong>(3) Single predictions are weakly informative.</strong> Even
+with an honest 0.72 AUC, the per-match calibration is loose: the model
+identifies <em>trends in booking decisions</em>, not crisp
+probabilities. We treat the system as entertainment and analytics
+infrastructure, not a wagering tool. The model card explicitly disclaims
+betting use.</p>
+<h1 id="methods">4. Methods</h1>
+<h2 id="feature-engineering">4.1 Feature engineering</h2>
+<p>We compute 35 features per (match, wrestler) row, all from pre-match
+state to avoid label leakage:</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Family</th>
+<th style="text-align: right;">Count</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Win momentum</td>
+<td style="text-align: right;">5</td>
+<td><code>win_rate_30d/90d/365d</code>, <code>current_win_streak</code>,
+<code>current_loss_streak</code></td>
+</tr>
+<tr class="even">
+<td>Event context</td>
+<td style="text-align: right;">4</td>
+<td><code>is_ppv</code>, <code>is_title_match</code>,
+<code>card_position</code>, <code>event_tier</code></td>
+</tr>
+<tr class="odd">
+<td>Match type</td>
+<td style="text-align: right;">9</td>
+<td><code>is_singles</code>, <code>is_royal_rumble</code>,
+<code>is_ladder</code>, <code>is_cage</code>,
+<code>match_type_win_rate</code></td>
+</tr>
+<tr class="even">
+<td>Title proximity</td>
+<td style="text-align: right;">3</td>
+<td><code>is_champion</code>, <code>num_defenses</code>,
+<code>days_since_title_match</code></td>
+</tr>
+<tr class="odd">
+<td>Career phase</td>
+<td style="text-align: right;">3</td>
+<td><code>years_active</code>, <code>matches_last_90d</code>,
+<code>days_since_last_match</code></td>
+</tr>
+<tr class="even">
+<td>Promotion</td>
+<td style="text-align: right;">1</td>
+<td><code>promotion_win_rate</code></td>
+</tr>
+<tr class="odd">
+<td>Head-to-head</td>
+<td style="text-align: right;">2</td>
+<td><code>h2h_win_rate</code>, <code>h2h_matches</code></td>
+</tr>
+<tr class="even">
+<td>Alignment</td>
+<td style="text-align: right;">6</td>
+<td><code>alignment</code>, <code>is_face</code>, <code>is_heel</code>,
+<code>days_since_turn</code>, <code>turns_12m</code>,
+<code>face_heel_matchup</code></td>
+</tr>
+<tr class="odd">
+<td>Match quality</td>
+<td style="text-align: right;">1</td>
+<td><code>avg_match_rating</code></td>
+</tr>
+<tr class="even">
+<td>Card momentum</td>
+<td style="text-align: right;">1</td>
+<td><code>card_position_momentum</code></td>
+</tr>
+</tbody>
+</table>
+<p>Implementation lives in <code>ml/features.py</code>. The published
+<code>feature_matrix.parquet</code> is a snapshot of this table at
+training time — bundled with the dataset to make model reproduction
+independent of the Postgres pipeline.</p>
+<h2 id="splits">4.2 Splits</h2>
+<p>We use a <strong>temporal split</strong> rather than random k-fold.
+Matches before 2024 form training, calendar year 2024 forms validation,
+and 2025+ forms test. Within the training set, no random shuffling is
+needed since features are pre-match by construction.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Split</th>
+<th>Period</th>
+<th style="text-align: right;">Rows</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Train</td>
+<td>&lt; 2024-01-01</td>
+<td style="text-align: right;">~590K</td>
+</tr>
+<tr class="even">
+<td>Validation</td>
+<td>2024</td>
+<td style="text-align: right;">~38K</td>
+</tr>
+<tr class="odd">
+<td>Test</td>
+<td>≥ 2025-01-01</td>
+<td style="text-align: right;">~5K</td>
+</tr>
+</tbody>
+</table>
+<h2 id="models">4.3 Models</h2>
+<p>Two architectures:</p>
+<ul>
+<li><strong>Logistic Regression</strong> (baseline): scikit-learn,
+<code>liblinear</code> solver, default regularization.</li>
+<li><strong>XGBoost</strong> (primary): 300 trees, max depth 6, learning
+rate 0.1, early stopping on validation log-loss with patience 20.</li>
+</ul>
+<p>Both are trained on the same 35-feature vector with the same temporal
+split. Hyperparameters were minimally tuned — the goal is honest
+evaluation, not score-chasing.</p>
+<h1 id="results">5. Results</h1>
+<h2 id="headline-metrics">5.1 Headline metrics</h2>
+<p>Test-set performance (the honest numbers):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">AUC-ROC</th>
+<th style="text-align: right;">Log loss</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Logistic Regression</td>
+<td style="text-align: right;">0.643</td>
+<td style="text-align: right;">0.698</td>
+<td style="text-align: right;">0.646</td>
+</tr>
+<tr class="even">
+<td><strong>XGBoost</strong></td>
+<td style="text-align: right;"><strong>0.662</strong></td>
+<td style="text-align: right;"><strong>0.718</strong></td>
+<td style="text-align: right;"><strong>0.636</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Both models meaningfully exceed the coin-flip baseline (0.50 AUC) and
+the “favored wrestler always wins” baseline (~0.62 AUC, computable from
+career win rates alone).</p>
+<h2 id="the-validationtest-gap">5.2 The validation→test gap</h2>
+<p>Validation metrics tell a very different story:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Split</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">AUC-ROC</th>
+<th style="text-align: right;">Log loss</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>XGBoost</td>
+<td>validation</td>
+<td style="text-align: right;">0.864</td>
+<td style="text-align: right;">0.952</td>
+<td style="text-align: right;">0.276</td>
+</tr>
+<tr class="even">
+<td>XGBoost</td>
+<td><strong>test</strong></td>
+<td style="text-align: right;"><strong>0.662</strong></td>
+<td style="text-align: right;"><strong>0.718</strong></td>
+<td style="text-align: right;"><strong>0.636</strong></td>
+</tr>
+<tr class="odd">
+<td>LR</td>
+<td>validation</td>
+<td style="text-align: right;">0.802</td>
+<td style="text-align: right;">0.872</td>
+<td style="text-align: right;">0.465</td>
+</tr>
+<tr class="even">
+<td>LR</td>
+<td>test</td>
+<td style="text-align: right;">0.643</td>
+<td style="text-align: right;">0.698</td>
+<td style="text-align: right;">0.646</td>
+</tr>
+</tbody>
+</table>
+<p>A 25-point AUC drop from validation to test is not normal
+hyperparameter overfitting. It reflects temporal autocorrelation:
+matches in 2024-12 are deeply informative about matches in 2024-11 (same
+wrestlers, same storylines, same alignment), but only weakly informative
+about matches in 2025-06 once storylines turn over.</p>
+<p>We initially treated this as a bug to fix. After ablation studies
+(Section 6) we concluded it is a <strong>structural property of the
+kayfabe problem</strong>, not a methodological error. Reporting it
+honestly is more useful than chasing a closer val/test agreement that
+would only be achievable by introducing leakage.</p>
+<h2 id="feature-importance">5.3 Feature importance</h2>
+<p>XGBoost top-5 features by gain:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Rank</th>
+<th>Feature</th>
+<th style="text-align: right;">Importance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td><code>current_win_streak</code></td>
+<td style="text-align: right;">0.31</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td><code>current_loss_streak</code></td>
+<td style="text-align: right;">0.22</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td><code>days_since_last_match</code></td>
+<td style="text-align: right;">0.13</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td><code>h2h_win_rate</code></td>
+<td style="text-align: right;">0.09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td><code>is_royal_rumble</code></td>
+<td style="text-align: right;">0.03</td>
+</tr>
+</tbody>
+</table>
+<p>Booking momentum dominates. Streaks alone account for over half the
+model’s signal. <code>is_royal_rumble</code> is the only match-type
+feature in the top 5 — this match format has a highly non-uniform winner
+distribution (#30 entrants disproportionately win) that the model
+exploits.</p>
+<p>The remaining 30 features collectively carry 22% of importance and
+individually round to noise.</p>
+<h1 id="discussion">6. Discussion</h1>
+<h2 id="what-the-model-is-actually-learning">6.1 What the model is
+actually learning</h2>
+<p>In aggregate, the model is a <strong>booking-pattern
+detector</strong>. It learns regularities like:</p>
+<ul>
+<li>Wrestlers on multi-match winning streaks tend to keep winning until
+a planned reversal.</li>
+<li>Wrestlers returning from injury (high
+<code>days_since_last_match</code>) tend to win their first match back
+(“comeback victory” booking template).</li>
+<li>Heels facing faces in title matches at PPVs tend to lose more often
+than chance suggests (face-victory storyline templates).</li>
+</ul>
+<p>These are observations about human writers, not about athletic
+competition. The model is correctly identifying that booking decisions
+follow narrative templates, and predicting consistent with those
+templates.</p>
+<h2 id="what-the-model-cannot-learn">6.2 What the model cannot
+learn</h2>
+<ul>
+<li><strong>Athletic skill.</strong> No measurement of athletic ability
+appears in the data. Two equally-booked wrestlers will produce
+indistinguishable feature vectors regardless of who is the “better
+worker.”</li>
+<li><strong>Surprises.</strong> Booking templates are followed most of
+the time, which is why streaks are predictive. Surprises — heel turns,
+debuts, returns — are rarer than templates and contribute most of the
+model’s irreducible loss.</li>
+<li><strong>Crowd reception.</strong> The <code>rating</code> column
+captures fan response but is downstream of the outcome. We do not use it
+as a feature for outcome prediction; we treat it as an alternative
+target (Section 7.1).</li>
+</ul>
+<h2 id="ablation-what-happens-if-we-remove-streak-features">6.3
+Ablation: what happens if we remove streak features?</h2>
+<p>We re-trained XGBoost with the five <code>*_streak</code>,
+<code>win_rate_*</code>, and <code>days_since_last_match</code> features
+removed. Test AUC fell from 0.718 to <strong>0.541</strong> — barely
+above coin-flip. Removing one feature family collapses the model.</p>
+<p>This is diagnostic. The model is not extracting many small signals;
+it is extracting one large signal (booking momentum) that the other 30
+features modestly refine. Future work should focus on richer momentum
+representations rather than additional feature families.</p>
+<h1 id="limitations-and-future-work">7. Limitations and Future Work</h1>
+<h2 id="limitations">7.1 Limitations</h2>
+<ul>
+<li><strong>Selection bias toward televised matches.</strong> House-show
+and indie results are sparsely represented; the model generalizes best
+to PPV / weekly-TV singles.</li>
+<li><strong>Era drift.</strong> A 1987 Hogan match and a 2025 Cody match
+share training space. Booking philosophy has shifted; era-aware modeling
+could recover some of the val→test gap.</li>
+<li><strong>Gender imbalance.</strong> Women’s-division match counts are
+smaller, especially pre-2015; expect wider error bars on women’s
+predictions.</li>
+<li><strong>Source reliability.</strong> Cagematch’s coverage skews
+toward fan-prominent events; obscure indie cards are missing entirely.
+This biases the model toward “well-known booking” patterns.</li>
+</ul>
+<h2 id="future-work">7.2 Future work</h2>
+<p>Three directions show real promise — listed in increasing order of
+difficulty:</p>
+<p><strong>(1) Match-rating regression.</strong> The Cagematch
+<code>rating</code> column is a real human signal (crowd response), not
+a writer’s whim. Regressing on rating instead of classifying on outcome
+reframes the problem to one with a less-corrupted target. Same data,
+different ceiling.</p>
+<p><strong>(2) Era-aware modeling.</strong> Explicit era embeddings
+(Attitude / Modern WWE / AEW / etc.) or per-era ensemble models could
+test how much of the val→test gap is attributable to booking-style
+drift.</p>
+<p><strong>(3) Storyline NLP.</strong> Match descriptions and event
+names contain narrative context — feud arcs, title chases, debut setups
+— that the current numeric features cannot capture. Embedding storyline
+text with a small LM and feeding it into the classifier is the most
+promising path to AUC gains beyond ~0.75. We have the raw text data
+(currently in scrape cache); a separate cleaned NLP-only release is in
+preparation.</p>
+<h1 id="conclusion">8. Conclusion</h1>
+<p>We built a complete ML system on a dataset whose label is generated
+by human creative work. The system performs honestly above baseline
+(0.718 AUC), but more usefully it documents a structural insight:
+<em>when the prediction target is a writer’s decision, traditional
+validation underestimates true error in proportion to how much storyline
+state persists across temporal boundaries.</em> The 25-point val→test
+gap is a feature, not a bug — a property of the data-generating process
+rather than methodological error.</p>
+<p>The dataset, model, and source are public. We hope they support both
+teaching (label-noise concepts, temporal validation, honest reporting)
+and downstream work in storyline NLP, era-aware modeling, and
+crowd-rating regression.</p>
+<h1 id="references-and-resources">References and Resources</h1>
+<ul>
+<li><strong>Dataset (Kaggle):</strong> <a
+href="https://www.kaggle.com/datasets/theodorerubin/ringside-wrestling-archive">theodorerubin/ringside-wrestling-archive</a></li>
+<li><strong>Dataset (HF mirror):</strong> <a
+href="https://huggingface.co/datasets/datamatters24/ringside-analytics">datamatters24/ringside-analytics</a></li>
+<li><strong>Trained model:</strong> <a
+href="https://www.kaggle.com/models/theodorerubin/ringside-analytics-match-winner">theodorerubin/ringside-analytics-match-winner</a></li>
+<li><strong>Starter notebook:</strong> <a
+href="https://www.kaggle.com/code/theodorerubin/ringside-wrestling-archive-starter">theodorerubin/ringside-wrestling-archive-starter</a></li>
+<li><strong>Source code:</strong> <a
+href="https://github.com/tedrubin80/wrastlingfirst">github.com/tedrubin80/wrastlingfirst</a></li>
+</ul>
+<p>License: CC0 (data) · Apache 2.0 (model + code).</p>
+<p>Citation: Rubin, T. (2026). <em>Ringside Analytics: Pro Wrestling
+Match Archive (1980–present).</em></p>
+</body>
+</html>
