@@ -84,6 +84,22 @@
   </section>
 
   <section class="section">
+    <h2>🎮 Try the model — live demo</h2>
+    <p>Pick two wrestlers, set the match context, and the XGBoost model returns a win probability with feature attribution. Hosted on Hugging Face Spaces; first request may take ~30 seconds if the Space has gone to sleep.</p>
+    <iframe
+      src="https://datamatters24-ringside-predictor.hf.space"
+      frameborder="0"
+      width="100%"
+      height="780"
+      style="border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card);"
+      title="Ringside Predictor — Gradio demo">
+    </iframe>
+    <p style="font-size: 0.88rem; color: var(--text-dim); margin-top: 0.75rem;">
+      Demo not loading? Open it directly: <a href="https://huggingface.co/spaces/datamatters24/ringside-predictor">huggingface.co/spaces/datamatters24/ringside-predictor</a>
+    </p>
+  </section>
+
+  <section class="section">
     <h2>Why this dataset is unusual</h2>
     <p>Pro wrestling outcomes are <strong>scripted</strong>. The <code>result</code> column doesn't record who's the better athlete — it records who got booked to win. That sounds like a flaw. It's actually the most interesting property of the dataset.</p>
     <p>If outcomes were random athletic results, every wrestler's career win rate would cluster near 0.5. The empirical distribution looks nothing like that:</p>
